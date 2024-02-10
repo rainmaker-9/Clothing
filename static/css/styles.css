@@ -1,0 +1,9 @@
+:root {
+  --bs-font-sans-serif: Jost !important;
+}
+
+#main-navbar .navbar-brand img {
+  height: 60px;
+  width: auto;
+  object-fit: cover;
+}

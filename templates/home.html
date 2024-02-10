@@ -1,0 +1,23 @@
+{% extends "layout.html" %}
+{% block title %}Home{% endblock %}
+{% block head %}
+{{ super() }}
+<style>
+  .carousel-inner img {
+    max-height: 800px;
+    object-fit: cover;
+  }
+</style>
+{% endblock %}
+{% block content %}
+<div id="carouselHero" class="carousel slide" data-bs-ride="carousel">
+  <div class="carousel-inner">
+    <div class="carousel-item active">
+      <img src="/static/images/hero-1.png" class="d-block w-100" alt="Hero Image">
+    </div>
+    <div class="carousel-item">
+      <img src="/static/images/hero-2.png" class="d-block w-100" alt="Hero Image">
+    </div>
+  </div>
+</div>
+{% endblock %}
