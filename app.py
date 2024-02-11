@@ -1,6 +1,9 @@
 from flask import Flask, make_response, redirect,render_template, request, session,url_for,flash, jsonify
 from mysql.connector import MySQLConnection
 from flask_bcrypt import Bcrypt
+import json
+from urllib.parse import quote
+from markupsafe import Markup
 
 app=Flask(__name__)
 bcrypt = Bcrypt(app)
@@ -17,14 +20,58 @@ config = {
 
 cnx=MySQLConnection(**config)
 app.secret_key='Cloth'
+app.jinja_env.filters['urlquote'] = lambda u: quote(str(u)) if u else ''
+
+@app.context_processor
+def inject_cart_and_user():
+	cursor = cnx.cursor(buffered=True, dictionary=True)
+	query = "SELECT title FROM tbl_categories"
+	cursor.execute(query)
+	categories = cursor.fetchall()
+	cursor.close()
+	if session.get('user'):
+		cursor = cnx.cursor(dictionary=True)
+		query = "SELECT product_info FROM tbl_cart WHERE user_id = %s"
+		user = session['user']
+		params = (user['id'],)
+		cursor.execute(query, params)
+		cartData = cursor.fetchone()
+		cursor.close()
+		if cartData != None:
+			data = len(cartData)
+		else:
+			data = 0
+		return dict(categories = categories, cartCount = data, user = user)
+	else:
+		return dict(categories = categories)
 
 @app.route('/')
 def home():
 	return render_template('home.html')
 
-@app.route('/login')
+@app.route('/login', methods=['GET', 'POST'])
 def login():
-	return render_template('login.html')
+	if request.method=='POST':
+		if request.form.get('email') != None and request.form.get('password'):
+			cursor = cnx.cursor(dictionary=True)
+			email = request.form.get("email")
+			password = request.form.get("password")
+			query = "SELECT secret, id, CONCAT(fname, ' ', lname) as name FROM tbl_users WHERE email = %s"
+			params = (email,)
+			cursor.execute(query, params)
+			data = cursor.fetchone()
+			if bcrypt.check_password_hash(data['secret'], password):
+				session['user'] = dict(email = email, id = data['id'], name = data['name'])
+				return jsonify({'status': True})
+			else:
+				return jsonify({'status': False, 'message': 'Invalid credentials'})
+		else:
+				return jsonify({'status': False, 'message': 'Invalid data'})
+	else:
+		if session.get('user'):
+			return redirect('/shop')
+		else:
+			return render_template('login.html')
 
 @app.route('/signup', methods=['POST'])
 def signup():
@@ -43,7 +90,40 @@ def signup():
 	
 @app.route('/shop')
 def shop():
-	return render_template('shop.html')
+	cursor = cnx.cursor(dictionary=True)
+	query = "SELECT p.id, p.name as title, p.thumbnail, COUNT(DISTINCT s.size) as variants, s.price FROM tbl_products p RIGHT JOIN tbl_specifications s ON s.pid = p.id GROUP BY p.name"
+	cursor.execute(query)
+	products = cursor.fetchall()
+	cursor.close()
+	return render_template('shop.html', products = products)
+
+@app.route('/cart')
+def cart():
+	if session.get('user'):
+		cursor = cnx.cursor()
+		query = "SELECT product_info FROM tbl_cart WHERE user_id = %s"
+		params = (session['user']['id'],)
+		cursor.execute(query, params)
+		data = cursor.fetchone()
+		if data != None:
+			product_info = json.loads(data[0])
+			cursor.close()
+			if len(product_info) > 0:
+				products = []
+				for p in product_info:
+					cursor = cnx.cursor(dictionary=True)
+					query = "SELECT p.name as title, p.thumbnail, s.size, s.price, s.quantity as stock FROM tbl_products p INNER JOIN tbl_specifications s ON s.pid = p.id WHERE s.id = %s"
+					params = (p['spec'],)
+					cursor.execute(query, params)
+					product = cursor.fetchone()
+					products.append(product)
+				return render_template('cart.html', cartProducts = products)
+			else:
+				return render_template('cart.html', cartProducts = 0)
+		else:
+			return render_template('cart.html', cartProducts = 0)
+	else:
+		return redirect('/login')
 
 @app.route('/checkout')
 def checkout():
@@ -74,8 +154,8 @@ def checkoutPage():
 
 @app.route('/logout')
 def logout():
-	session.pop('email',None)
-	return redirect(url_for("signup"))
+	session.clear()
+	return redirect(url_for("login"))
 
 '''
 @app.route('/gen-pass')

@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset= "UTF-8">
+        <meta http-equiv="X-UA-Compatible" content= "IE=edge"> 
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
+        <title>Clothing Website</title>
+        <link rel="stylesheet" href="/static/css/style.css"> 
+        
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Jost:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,600;1,800;1,900&display=swap" rel="stylesheet">
+
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" integrity="sha512-z3gLpd7yknf1YoNbCzqRKc4qyor8gaKU1qmn+CShxbuBusANI9QpRohGBreCFkKxLhei6S9CQXFEbbKuqLg0DA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+        <link rel="stylesheet"
+        href="https://unpkg.com/boxicons@latest/css/boxicons.min.css">
+        
+        <!-- if you want to add jquery and using $ symbol in js add the following src
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>-->
+
+        <!--<script>
+                app.post('/cart1/:productId', (req, res) => {
+                // Your logic here
+
+                res.json({ success: true });
+                });
+        </script>-->    
+        <!--<script>
+            $('button.add-to-cart').on('click', function(e) {
+            e.preventDefault();
+
+            var pid = $(this).data('product-id');
+
+            $.ajax({
+                url: '/add-to-cart/' + pid,
+                method: 'POST',
+                success: function(data) {
+                if (data.success) {
+                    alert('Product added to cart!');
+                } else {
+                    alert('Error adding product to cart.');
+                }
+                },
+                error: function() {
+                alert('Error adding product to cart.');
+                }
+            });
+            });
+        </script>
+    -->
+        
+        </script>
+        <script> 
+        const sizeButtons = document.querySelectorAll('.size-button'); 
+        sizeButtons.forEach((button) => { 
+            button.addEventListener('click', () => { 
+                sizeButtons.forEach((otherButton) => {
+                     otherButton.classList.remove('active'); }); 
+                     button.classList.add('active'); 
+                     document.getElementById('selectedSize').value = button.dataset.size; 
+            }); 
+        }); 
+        </script>
+    
+    <script>
+        function addToCart() {
+            alert("Product has been added to cart");
+        }
+
+
+        function buyNow() {
+            alert("Go to cart");
+        }
+    </script>
+
+<style>
+    .cart-icon {
+        position: relative;
+    }
+
+    .cart-icon span {
+        position: absolute;
+        top: 0;
+        right: 8px;
+        background-color: red;
+        color: #fff;
+        display: inline-block;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        font-size: 0.825rem;
+        text-align: center;
+    }
+
+</style>
+    </head> 
+    <body>
+            <header>
+                <a href="#" class="logo"><img src="{{ url_for('static', filename='logo.png') }}"></a>
+
+                <ul class="navmenu">
+                    <li><a href="/">Home</a></li>
+                    <li><a href="#">Shop</a></li>
+                    <li><a href="/product">Products</a></li>
+                    <li><a href="#">Men's</a></li>
+                    <li><a href="#">Sale</a></li>
+                </ul>
+
+                <div class="nav-icon">
+                    <a href="#"><i class='bx bx-search' ></i></a>
+                    <a href="/login"><i class='bx bxs-user' ></i></a>
+                    <a href="/checkout" class="cart-icon"><i class='bx bx-cart' ></i>
+                        <span>{{count}}</span></a>
+
+                    <div class="bx bx-menu" id="menu-icon"></div>
+                </div>
+            </header>
+
+            
+            <!--Trending products section -->
+
+            <section class="trending-product" id="trending">
+                <!--<div class="center-text">
+                    <h2> Our Trending<span> Products</span></h2>
+                </div>-->
+
+            
+                <div class="products">
+                
+                    <div class="row">
+                        <!--<img src="{{ url_for('static', filename='Relax1.jpeg') }}" alt="">-->        
+                        <div class="price">
+                            <style>
+                            .column {
+                                float: left;
+                                width: 50%;
+                                padding: 10px;
+                                height: 400px; /* Should be removed. Only for demonstration */
+                              }
+
+                              .row:after {
+                                content: "";
+                                display: table;
+                                clear: both;
+                                }
+                            </style>
+
+                            <style>
+                                .button-2 {
+                                appearance: none;
+                                background-color: #000000;
+                                border: 2px solid rgba(0, 0, 0, 0.15);
+                                border-radius: 4px;
+                                box-shadow: rgba(27, 31, 35, .1) 0 1px 0;
+                                box-sizing: border-box;
+                                color: #fff;
+                                cursor: pointer;
+                                display: inline-block;
+                                font-family: -apple-system,system-ui,"Segoe UI",Helvetica,Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji";
+                                font-size: 14px;
+                                font-weight: 600;
+                                line-height: 20px;
+                                padding: 3px 24px;
+                                position: relative;
+                                text-align: center;
+                                text-decoration: none;
+                                user-select: none;
+                                -webkit-user-select: none;
+                                touch-action: manipulation;
+                                vertical-align: middle;
+                                white-space: nowrap;
+                                }
+                                
+                                .button-2:focus:not(:focus-visible):not(.focus-visible) {
+                                box-shadow: none;
+                                outline: none;
+                                }
+                                
+                                .button-2:hover {
+                                background-color: #333533;
+                                }
+                                
+                                .button-2:focus {
+                                box-shadow: rgba(46, 164, 79, .4) 0 0 0 3px;
+                                outline: none;
+                                }
+                                
+                                .button-2:disabled {
+                                background-color: #94d3a2;
+                                border-color: rgba(27, 31, 35, .1);
+                                color: rgba(255, 255, 255, .8);
+                                cursor: default;
+                                }
+                                
+                                .button-2:active {
+                                background-color: #298e46;
+                                box-shadow: rgba(20, 70, 32, .2) 0 1px 0 inset;
+                                }
+                                
+                                </style>
+                            <style>
+                                .button-3 {
+                                appearance: none;
+                                background-color: #000000;
+                                border: 2px solid rgba(0, 0, 0, 0.15);
+                                border-radius: 4px;
+                                box-shadow: rgba(27, 31, 35, .1) 0 1px 0;
+                                box-sizing: border-box;
+                                color: #fff;
+                                cursor: pointer;
+                                display: inline-block;
+                                font-family: -apple-system,system-ui,"Segoe UI",Helvetica,Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji";
+                                font-size: 14px;
+                                font-weight: 600;
+                                line-height: 20px;
+                                padding: 3px 32px;
+                                position: relative;
+                                text-align: center;
+                                text-decoration: none;
+                                user-select: none;
+                                -webkit-user-select: none;
+                                touch-action: manipulation;
+                                vertical-align: middle;
+                                white-space: nowrap;
+                                
+                                }
+                                
+                                .button-3:focus:not(:focus-visible):not(.focus-visible) {
+                                box-shadow: none;
+                                outline: none;
+                                }
+                                
+                                .button-3:hover {
+                                background-color: #333533;
+                                }
+                                
+                                .button-3:focus {
+                                box-shadow: rgba(46, 164, 79, .4) 0 0 0 3px;
+                                outline: none;
+                                }
+                                
+                                .button-3:disabled {
+                                background-color: #94d3a2;
+                                border-color: rgba(27, 31, 35, .1);
+                                color: rgba(255, 255, 255, .8);
+                                cursor: default;
+                                }
+                                
+                                .button-3:active {
+                                background-color: #298e46;
+                                box-shadow: rgba(20, 70, 32, .2) 0 1px 0 inset;
+                                }
+
+                                /* size button */
+                                .button-28 {
+                                appearance: none;
+                                background-color: transparent;
+                                border: 1px solid #1A1A1A;
+                                border-radius: 50px;
+                                box-sizing: border-box;
+                                color: #3B3B3B;
+                                cursor: pointer;
+                                display: inline-block;
+                                font-family: Roobert,-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol";
+                                font-size: 16px;
+                                font-weight: 600;
+                                line-height: normal;
+                                margin: 0;
+                                min-height: 6px;
+                                min-width: 0;
+                                outline: none;
+                                padding: 2px 2px;
+                                text-align: center;
+                                text-decoration: none;
+                                transition: all 300ms cubic-bezier(.23, 1, 0.32, 1);
+                                user-select: none;
+                                -webkit-user-select: none;
+                                touch-action: manipulation;
+                                width: 5%;
+                                will-change: transform;
+                                }
+
+                                .button-28:disabled {
+                                pointer-events: none;
+                                }
+
+                                .button-28:hover {
+                                color: #fff;
+                                background-color: #1A1A1A;
+                                box-shadow: rgba(0, 0, 0, 0.25) 0 8px 15px;
+                                transform: translateY(-2px);
+                                }
+
+                                .button-28:active {
+                                box-shadow: none;
+                                transform: translateY(0);
+                                }
+
+                                .button-28.S {
+                                    background-color: #000000;
+                                }
+                                .button-28.M {
+                                    background-color: #000000;
+                                }
+                                .button-28.L {
+                                    background-color: #000000;
+                                }
+                                .button-28.XL {
+                                    background-color: #000000;
+                                }
+
+                                .button-28.S input:checked{
+                                    border-radius: 6px
+                                }
+
+                                .button-28.M input:checked{
+                                    border-radius: 6px
+                                }
+                                .button-28.L input:checked{
+                                    border-radius: 6px
+                                }
+                                .button-28.XL input:checked{
+                                    border-radius: 6px
+                                }
+
+                                .button-28 input[type="radio"] {
+                                    position:absolute;
+                                    top: 0;
+                                    bottom: 0;
+                                    left: 0;
+                                    right: 0;
+                                    opacity: 4;
+                                }
+
+                                </style>
+
+
+
+                                <!--colour button-->
+                                <style>
+                                .button-281 {
+                                appearance: none;
+                                background-color: transparent;
+                                border: 1px solid #1A1A1A;
+                                border-radius: 1px;
+                                box-sizing: border-box;
+                                color: #3B3B3B;
+                                cursor: pointer;
+                                display: inline-block;
+                                font-family: Roobert,-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol";
+                                font-size: 16px;
+                                font-weight: 600;
+                                line-height: normal;
+                                margin: 0;
+                                min-height: 6px;
+                                min-width: 10%;
+                                outline: none;
+                                padding: 2px 2px;
+                                text-align: center;
+                                text-decoration: none;
+                                transition: all 300ms cubic-bezier(.23, 1, 0.32, 1);
+                                user-select: none;
+                                -webkit-user-select: none;
+                                touch-action: manipulation;
+                                width: 5%;
+                                will-change: transform;
+                                }
+
+                                .button-281:disabled {
+                                pointer-events: none;
+                                }
+
+                                .button-281:hover {
+                                color: #fff;
+                                background-color: #1A1A1A;
+                                box-shadow: rgba(0, 0, 0, 0.25) 0 8px 15px;
+                                transform: translateY(-2px);
+                                }
+
+                                .button-281:active {
+                                box-shadow: none;
+                                transform: translateY(0);
+                                }
+
+                                .color-input-radio {
+                                    position: relative;
+                                    height: 25px;
+                                    width: 25px;
+                                    border-radius: 50%;
+                                    cursor: pointer;
+                                    pointer-events: all;
+                                    display: inline-block;
+                                    margin-right: 10px;
+                                }
+
+                                .color-input-radio input {
+                                    border-radius: 50%;
+                                    appearance: none;
+                                }
+                                
+
+                                .color-input-radio.brown {
+                                    background-color: brown;
+                                }
+                                
+                                .color-input-radio.black {
+                                    background-color: rgb(0, 0, 0);
+                                }
+
+                                .color-input-radio.red {
+                                    background-color: red;
+                                }
+
+                                .color-input-radio.blue {
+                                    background-color: blue;
+                                }
+
+                                .color-input-radio.black input.checked {
+                                    box-shadow: 0 0 7px 2px rgba(0, 0, 0, 0.75);
+                                    opacity: 1;
+                                }
+
+                                .color-input-radio.brown input.checked {
+                                    box-shadow: 0 0 7px 2px rgba(250, 100, 50, 0.75);
+                                    opacity: 1;
+                                }
+
+                                .color-input-radio.red input.checked {
+                                    box-shadow: 0 0 7px 2px rgba(250, 50, 50, 0.75);
+                                    opacity: 1;
+                                }
+
+                                .color-input-radio.blue input.checked {
+                                    box-shadow: 0 0 7px 2px rgba(50, 50, 250, 0.75);
+                                    opacity: 1;
+                                }
+
+                                .color-input-radio input[type="radio"] {
+                                    position:absolute;
+                                    top: 0;
+                                    bottom: 0;
+                                    left: 0;
+                                    right: 0;
+                                    opacity: 0;
+                                }
+
+                                </style>
+            <form action="/addtocart1" method="POST">
+                            <div class="row">
+                                <div class="column" >
+                                    <h4 align="center"><img src="../static/images/{{product[0][3]}}" alt="" style="width:200px;border-radius: 5px;"></h4>
+                                    
+                                        <div align="center" class="rating">
+                                            <h4>Reviews</h4>
+                                            <i class='bx bxs-star' ></i>
+                                            <i class='bx bxs-star' ></i>
+                                            <i class='bx bxs-star' ></i>
+                                            <i class='bx bxs-star' ></i>
+                                            <i class='bx bxs-star-half' ></i>
+                                        </div>
+                                </div>
+
+                                <div class="column"  > <h4><b><input type="hidden" value="{{product[0][0]}}" name="pname">{{product[0][0]}}</b></h4><br>
+                                
+                                <h4><input type="hidden" value="{{product[0][2]}}" name="price">Rs {{product[0][2]}}</h4><br>
+                                {% set c=namespace(M=0,S=0,L=0,XL=0,black=0,brown=0,blue=0,red=0) %}
+                                    <h4>
+                                    <label for="size">Select Size</label><br>
+                                    
+                                        {% for data in product %}
+                                            {% if data[1]=='M' and c.M==0 %}
+                                            <!-- <input type="hidden" value="{{data[1]}}" name="siz"> -->
+                                            <div class="form-group" style="display: inline-block; margin-right: 1px;">
+                                                <input type="radio" name="size" id="medium" value="{{data[1]}}">
+                                                <label for="medium">M</label>&nbsp;&nbsp;
+                                            </div>   
+                                            {% set c.M=1 %}
+                                            {% elif data[1]=='S' and c.S==0 %}
+                                            <div class="form-group" style="display: inline-block; margin-right: 1px;">
+                                                <input type="radio" name="size" id="small" value="{{data[1]}}">
+                                                <label for="small">S</label>&nbsp;&nbsp;
+                                            </div>
+                                            {% set c.S=1 %}   
+                                            {% elif data[1]=='L' and c.L==0 %}
+                                            <div class="form-group" style="display: inline-block; margin-right: 1px;">
+                                                <input type="radio" name="size" id="large" value="{{data[1]}}">
+                                                <label for="large">L</label>&nbsp;&nbsp;
+                                            </div>
+                                            {% set c.L=1 %}
+                                            {% elif data[1]=='XL' and c.XL==0 %}
+                                            <div class="form-group" style="display: inline-block; margin-right: 1px;">
+                                                <input type="radio" name="size" id="xlarge" value="{{data[1]}}">
+                                                <label for="xlarge">XL</label>&nbsp;&nbsp;
+                                            </div>
+                                            {% set c.XL=1 %}
+                                            {% endif %}
+                                        {% endfor %}
+                                    
+                                        
+                                    </h4><br>
+                                    <h4>
+                                       
+                                    
+                                    <label for="size">Select Colour</label><br>
+                                    
+                                {% for data in product %} 
+                                    {% if data[4]=='black' and c.black==0 %}         
+                                    <div class="color-input-radio {{data[4]}}">
+                                        <input name="colour" type="radio" value="{{data[4]}}">
+                                       
+                                    </div>   
+                                        {% set c.black=1 %}
+                                    {% elif data[4]=='brown' and c.brown==0 %}
+                                    <div class="color-input-radio {{data[4]}}">
+                                        <input name="colour" type="radio" value="{{data[4]}}">
+                                       
+                                    </div>
+                                        {% set c.brown=1 %}   
+                                    {% elif data[4]=='blue' and c.blue==0 %}
+                                    <div class="color-input-radio {{data[4]}}">
+                                        <input name="colour" type="radio" value="{{data[4]}}">
+                                       
+                                    </div>
+                                        {% set c.blue=1 %}
+                                    {% elif data[4]=='red' and c.red==0 %}
+                                    <div class="color-input-radio {{data[4]}}">
+                                        <input name="colour" type="radio" value="{{data[4]}}">
+                                       
+                                    </div>
+                                        {% set c.red=1 %}
+                                    {% endif %}                                       
+                                {% endfor %}
+                                    
+    
+                                    </h4><br>
+
+                                    <input type="hidden" name="pid" value="{{product[0][5]}}">
+                                    
+                                    <input type="submit"  class="button-2" value="Add to cart"><br><br>
+                                    <a href="/checkout"><button  class="button-3"  >Buy now</button></a>
+                                    
+                                </div>   
+                            </div>
+                            
+                            
+                            
+                        </div>  
+                    </div>
+                </div>
+            </form>
+           
+                
+           
+            
+            
+            <!-- contact section-->
+            <section class="contact">
+                <div class="contact-info">
+                    <div class="first-info">
+                        <img src="{{ url_for('static', filename='logo.png') }}" alt="">
+
+                        <p>Tarabai park Street 9114, <br> KOP Maharashtra Bharat 86689</p>
+                        <p>0231866897558</p>
+                        <p>streetillusionstore@gmail.com</p>
+
+                        <div class="social-icon">
+                            <a href="#"><i class='bx bxl-facebook' ></i></a>
+                            <a href="#"><i class='bx bxl-twitter' ></i></a>
+                            <a href="#"><i class='bx bxl-instagram' ></i></a>
+                            <a href="#"><i class='bx bxl-youtube' ></i></a>
+                            <a href="#"><i class='bx bxl-linkedin' ></i></a>
+                        </div>
+
+                    </div>
+                    <div class="second-info">
+                        <h4>Support</h4>
+                        <p>Contact us</p>
+                        <p>About page</p>
+                        <p>Size guide</p>
+                        <p>Shopping and Returns</p>
+                        <p>Privacy</p>
+                    </div>
+
+                    <div class="third-info">
+                        <h4>Shop</h4>
+                        <p>Men's Shopping</p>
+                        <p>Kid's Shopping</p>
+                        <p>Discount</p>
+                    </div>
+
+                    <div class="fourth-info">
+                        <h4>Company</h4>
+                        <p>About</p>
+                        <p>Blog</p>
+                        <p>Afiliate</p>
+                        <p>Login</p>
+                    </div>
+
+
+                    <div class="five">
+                        <h4>Subscribe</h4>
+                        <p>Recieve updates, Hot Deals, New Arrivals</p>
+                        <p>StreetIllusion</p>
+                        <p>Recieve updates, Hot Deals, New Arrivals</p>
+                    </div>
+                </div>
+
+
+            </section>
+
+            <script src="java.js">
+                
+            </script>
+
+            <script>
+                const colors = document.querySelectorAll('[name="colour"]')
+
+                if(colors.length) {
+                    colors.forEach(color => color.addEventListener('click', e => {
+                        if(e.target.checked) {
+                            const filtered = Array.from(colors).filter(c => c.value !== color.value)
+                            filtered.forEach(item => item.classList.remove('checked'))
+                            const ele = e.target.classList.add('checked')
+                        } else {
+                            const ele = e.target.classList.remove('checked')
+                        }
+                        
+                    }))
+                }
+            </script>
+
+            <div class="end-text">
+                <p>Copyright @2023.All rights reserved By Streetillusion Store owner - Onkar Savaratkar,Rajdeep Jadhav</p>
+            </div>
+    </body>
+</htm1>
+
+<!-- HTML !-->
+
+

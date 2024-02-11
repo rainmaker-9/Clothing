@@ -7,3 +7,28 @@
   width: auto;
   object-fit: cover;
 }
+
+.cart-icon {
+  position: relative;
+}
+
+.cart-icon .badge {
+  background-color: var(--bs-danger);
+  color: var(--bs-white);
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  font-weight: 300;
+  position: absolute;
+  top: 0;
+  left: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.text-currency-before::before {
+  content: "\20B9";
+  display: inline-block;
+  margin-right: 0.35rem;
+}

@@ -4,6 +4,9 @@
   <head>
     {% block head %}
     <title>{% block title %}{% endblock %} - Clothing Website</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="shortcut icon" href="{{ url_for('static', filename='images/logo.png') }}" type="image/jpg">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
@@ -21,8 +24,8 @@
     <main class="flex-shrink-0">
       <nav class="navbar navbar-expand-lg navbar-light bg-light sticky-top" id="main-navbar">
         <div class="container">
-          <a class="navbar-brand" href="/">
-            <img src="{{ url_for('static', filename='images/logo.jpg') }}" alt="Logo">
+          <a class="navbar-brand" href="{{ url_for('home') }}">
+            <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Logo">
           </a>
           <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMain"
             aria-controls="navbarMain" aria-expanded="false" aria-label="Toggle navigation">
@@ -31,25 +34,53 @@
           <div class="collapse navbar-collapse" id="navbarMain">
             <ul class="navbar-nav mx-auto mb-2 mb-lg-0">
               <li class="nav-item">
-                <a class="nav-link" href="/">Home</a>
+                <a class="nav-link" href="{{ url_for('home') }}">Home</a>
               </li>
               <li class="nav-item">
-                <a class="nav-link" href="/shop">Shop</a>
+                <a class="nav-link" href="{{ url_for('shop') }}">Shop</a>
               </li>
+              {% if categories %}
+              {% for category in categories %}
               <li class="nav-item">
-                <a class="nav-link" href="/shop">Male</a>
+                <a class="nav-link" href="{{ url_for('shop') }}?category={{ category.title|urlquote }}">{{
+                  category.title
+                  }}</a>
               </li>
-              <li class="nav-item">
-                <a class="nav-link" href="/shop">Female</a>
-              </li>
+              {% endfor %}
+              {% endif %}
             </ul>
-            <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+            <ul class="navbar-nav ms-auto mb-2 mb-lg-0 gap-2">
               <li class="nav-item">
-                <a class="nav-link" href="/"><i class="fa-solid fa-shopping-bag fa-lg"></i></a>
+                <a class="nav-link cart-icon" href="/cart">
+                  <i class="fa-solid fa-shopping-bag fa-xl"></i>
+                  {% if cartCount %}
+                  <span class="badge">{{
+                    cartCount }}</span>
+                  {% endif %}
+                </a>
               </li>
+              {% if user %}
+              <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
+                  aria-expanded="false">
+                  <i class="fa-solid fa-user fa-xl"></i>
+                </a>
+                <ul class="dropdown-menu dropdown-menu-end dropdown-menu-lg-start">
+                  <li>
+                    <h6 class="dropdown-header mb-0">{{ user.name }}</h6>
+                    <h6 class="dropdown-header">{{ user.email }}</h6>
+                  </li>
+                  <li class="dropdown-divider"></li>
+                  <li class="dropdown-item">
+                    <a class="nav-link" href="/logout"><i class="fa-solid fa-sign-out-alt me-2"></i>Logout</a>
+                  </li>
+                </ul>
+              </li>
+              {% else %}
               <li class="nav-item">
-                <a class="nav-link" href="/login"><i class="fa-solid fa-user fa-lg"></i></a>
+                <a class="nav-link" href="/login"><i class="fa-solid fa-user fa-xl"></i></a>
               </li>
+              {% endif %}
             </ul>
           </div>
         </div>
