@@ -3,8 +3,8 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3307
--- Generation Time: Feb 10, 2024 at 01:39 PM
--- Server version: 10.6.5-MariaDB
+-- Generation Time: Feb 11, 2024 at 07:19 AM
+-- Server version: 11.2.2-MariaDB
 -- PHP Version: 8.2.13
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
@@ -33,7 +33,7 @@ DROP TABLE IF EXISTS `pimage`;
 CREATE TABLE IF NOT EXISTS `pimage` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `pid` int(11) NOT NULL,
-  `imgpath` varchar(60) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `imgpath` varchar(60) NOT NULL,
   `date` datetime DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `pid` (`pid`)
@@ -62,7 +62,7 @@ INSERT INTO `pimage` (`id`, `pid`, `imgpath`, `date`) VALUES
 DROP TABLE IF EXISTS `pmain`;
 CREATE TABLE IF NOT EXISTS `pmain` (
   `pid` int(11) NOT NULL AUTO_INCREMENT,
-  `pname` varchar(70) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `pname` varchar(70) NOT NULL,
   `date` datetime DEFAULT NULL,
   PRIMARY KEY (`pid`)
 ) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -90,10 +90,10 @@ INSERT INTO `pmain` (`pid`, `pname`, `date`) VALUES
 DROP TABLE IF EXISTS `product1`;
 CREATE TABLE IF NOT EXISTS `product1` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  `pname` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `pname` varchar(50) DEFAULT NULL,
   `price` int(11) DEFAULT NULL,
-  `colour` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `size` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `colour` varchar(50) DEFAULT NULL,
+  `size` varchar(50) DEFAULT NULL,
   `quantity` int(11) DEFAULT NULL,
   `cdate` datetime DEFAULT NULL,
   PRIMARY KEY (`id`)
@@ -114,50 +114,50 @@ INSERT INTO `product1` (`id`, `pname`, `price`, `colour`, `size`, `quantity`, `c
 -- --------------------------------------------------------
 
 --
--- Table structure for table `pspecification`
---
-
-DROP TABLE IF EXISTS `pspecification`;
-CREATE TABLE IF NOT EXISTS `pspecification` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `pid` int(11) NOT NULL,
-  `colour` varchar(60) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `date` datetime DEFAULT NULL,
-  PRIMARY KEY (`id`),
-  KEY `pid` (`pid`)
-) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
---
--- Dumping data for table `pspecification`
---
-
-INSERT INTO `pspecification` (`id`, `pid`, `colour`, `date`) VALUES
-(1, 2, 'black', '2024-01-03 12:27:51'),
-(2, 3, 'brown', '2024-01-03 12:27:58'),
-(3, 7, 'white', '2024-01-03 12:28:06'),
-(4, 8, 'brown', '2024-01-03 12:28:34'),
-(5, 9, 'black', '2024-01-03 12:28:47'),
-(6, 11, 'blue', '2024-01-03 12:29:06'),
-(8, 12, 'red', '2024-01-03 12:29:29'),
-(9, 2, 'black', '2024-01-12 05:08:54'),
-(10, 2, 'brown', '2024-01-12 05:08:58'),
-(11, 2, 'blue', '2024-01-12 05:09:01'),
-(12, 2, 'red', '2024-01-12 05:09:06');
-
--- --------------------------------------------------------
-
---
 -- Table structure for table `tbl_cart`
 --
 
 DROP TABLE IF EXISTS `tbl_cart`;
 CREATE TABLE IF NOT EXISTS `tbl_cart` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `spec_id` int(11) DEFAULT NULL,
-  `date` datetime DEFAULT NULL,
-  PRIMARY KEY (`id`),
-  KEY `spec_id` (`spec_id`)
+  `product_info` text NOT NULL,
+  `user_id` int(11) DEFAULT NULL,
+  `date` timestamp NOT NULL DEFAULT current_timestamp(),
+  KEY `user_id` (`user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `tbl_cart`
+--
+
+INSERT INTO `tbl_cart` (`product_info`, `user_id`, `date`) VALUES
+('[{\"spec\": 1, \"qnt\": 2},{\"spec\": 3, \"qnt\": 1}]', 1, '2024-02-11 06:35:55');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `tbl_categories`
+--
+
+DROP TABLE IF EXISTS `tbl_categories`;
+CREATE TABLE IF NOT EXISTS `tbl_categories` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `title` tinytext NOT NULL,
+  `date` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `tbl_categories`
+--
+
+INSERT INTO `tbl_categories` (`id`, `title`, `date`) VALUES
+(1, 'T-shirt', '2024-02-11 04:19:55'),
+(2, 'Shirt', '2024-02-11 04:19:55'),
+(3, 'Joggers', '2024-02-11 04:19:55'),
+(4, 'Trousers', '2024-02-11 04:19:55'),
+(5, 'Jeans', '2024-02-11 04:19:55'),
+(6, 'Hoodie', '2024-02-11 04:19:55'),
+(7, 'Sweatshirt', '2024-02-11 04:19:55');
 
 -- --------------------------------------------------------
 
@@ -167,23 +167,23 @@ CREATE TABLE IF NOT EXISTS `tbl_cart` (
 
 DROP TABLE IF EXISTS `tbl_products`;
 CREATE TABLE IF NOT EXISTS `tbl_products` (
-  `id` int(11) NOT NULL,
-  `name` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `description` text COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `image_url` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(100) DEFAULT NULL,
+  `description` text DEFAULT NULL,
+  `thumbnail` tinytext NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=21 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Dumping data for table `tbl_products`
 --
 
-INSERT INTO `tbl_products` (`id`, `name`, `description`, `image_url`) VALUES
-(1, 'Relaxed Fit Jersey top T-shirt', 'Top in soft cotton jersey with a Relaxed fit with long sleeves.', 'images/relfit-longsleeve-tshirt.jpeg'),
-(2, 'Regular Fit Jersey top T-shirt', 'Regular-fit top in soft cotton jersey with round neckline and long sleeves.', 'images/regfit-longsleeve-tshirt.jpeg'),
-(3, 'Slim Fit Polo T-shirt', 'Slim-fit polo shirt in soft cotton jersey,', 'images/slimfit-polo-tshirt.jpeg'),
-(4, 'Regular Fit Polo T-shirt', 'Polo shirt in soft, fine-knit cotton.', 'images/regfit-polo-tshirt.jpeg'),
-(5, 'Regular Fit Oxford shirt', 'Regular-fit shirt in Oxford cotton with a button-down collar.', 'images/regfit-casual-shirt.jpeg'),
+INSERT INTO `tbl_products` (`id`, `name`, `description`, `thumbnail`) VALUES
+(1, 'Relaxed Fit Jersey top T-shirt', 'Top in soft cotton jersey with a Relaxed fit with long sleeves.', 'images/Relax1.jpeg'),
+(2, 'Regular Fit Jersey top T-shirt', 'Regular-fit top in soft cotton jersey with round neckline and long sleeves.', 'images/relaxp1.jpeg'),
+(3, 'Relaxed Fit Full sleeve T-shirt', 'Slim-fit polo shirt in soft cotton jersey,', 'images/a1.jpeg'),
+(4, 'Regular Fit Full sleeve T-shirt', 'Polo shirt in soft, fine-knit cotton.', 'images/e1.jpeg'),
+(5, 'Oxford T-Shirt', 'Regular-fit shirt in Oxford cotton with a button-down collar.', 'images/regfit-casual-shirt.jpeg'),
 (6, 'Relaxed Fit Corduroy shirt', 'Relaxed-fit shirt in soft cotton corduroy.', 'images/relfit-casual-shirt.jpeg'),
 (7, 'Loose Fit Short-sleeved shirt', 'Short-sleeved shirt in a printed cotton weave.', 'images/loosefit-short-shirt.jpeg'),
 (8, 'Relaxed Fit Short-sleeved shirt', 'Relaxed-fit shirt in a cotton weave with a turn-down collar.', 'images/relfit-short-shirt.jpeg'),
@@ -193,11 +193,10 @@ INSERT INTO `tbl_products` (`id`, `name`, `description`, `image_url`) VALUES
 (12, 'Relaxed Fit Cargo trousers', 'Relaxed-fit cargo trousers in a cotton weave.', 'images/regfit-cargo-trousers.jpeg'),
 (13, 'Relaxed Jeans', '5-pocket jeans in rigid cotton denim with a relaxed fit from the seat to the hem.', 'images/relfit-relaxed-jeans.jpeg'),
 (14, 'Straight Relaxed Jeans', '5-pocket jeans in rigid denim with a straight leg from the seat to the hem.', 'images/straight-relaxed-jeans.jpeg'),
-(15, 'Slim Jeans', '5-pocket jeans in cotton denim with a slight stretch for good comfort.', 'images/slimfit1-slim-jeans.jpeg'),
 (16, 'Retro Slim Jeans', '5-pocket jeans in cotton denim with a slight stretch for good comfort.', 'images/retro-slim-jeans.jpeg'),
-(17, 'Relaxed Fit Hoodie', 'Relaxed fit Hoodie in sweatshirt fabric made from a cotton blend.', 'images/relfit-hoodie.jpeg'),
-(18, 'Oversized Fit hoodie', 'Oversized hoodie in sweatshirt fabric made from a cotton blend.', 'images/oversized-hoodie.jpeg'),
-(19, 'Relaxed Fit Sweatshirt', 'Relaxed fit Sweatshirt with dropped shoulders.', 'images/relfit-sweatshirt.jpeg'),
+(17, 'Relaxed Fit Hoodie', 'Relaxed fit Hoodie in sweatshirt fabric made from a cotton blend.', 'images/c1.jpeg'),
+(18, 'Oversized Fit hoodie', 'Oversized hoodie in sweatshirt fabric made from a cotton blend.', 'images/d1.jpeg'),
+(19, 'Regular Fit Hoodie', 'Relaxed fit Sweatshirt with dropped shoulders.', 'images/g1.jpeg'),
 (20, 'Loose Fit Sweatshirt', 'Loose fit Sweatshirt with dropped shoulders.', 'images/loosefit-sweatshirt.jpeg');
 
 -- --------------------------------------------------------
@@ -209,11 +208,11 @@ INSERT INTO `tbl_products` (`id`, `name`, `description`, `image_url`) VALUES
 DROP TABLE IF EXISTS `tbl_specifications`;
 CREATE TABLE IF NOT EXISTS `tbl_specifications` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  `size` varchar(30) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `size` varchar(30) NOT NULL,
   `quantity` int(11) NOT NULL,
   `price` int(11) NOT NULL,
   `pid` int(11) NOT NULL,
-  `date` datetime DEFAULT NULL,
+  `date` timestamp NOT NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`id`),
   KEY `pid` (`pid`)
 ) ENGINE=InnoDB AUTO_INCREMENT=42 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -223,35 +222,35 @@ CREATE TABLE IF NOT EXISTS `tbl_specifications` (
 --
 
 INSERT INTO `tbl_specifications` (`id`, `size`, `quantity`, `price`, `pid`, `date`) VALUES
-(1, 'L', 10, 699, 3, '2023-12-30 13:13:42'),
-(2, 'XL', 50, 1500, 7, '2023-12-31 15:16:31'),
-(3, 'L', 60, 899, 8, '2023-12-31 15:16:53'),
-(4, 'M', 80, 1299, 9, '2023-12-31 15:17:19'),
-(5, 'XXL', 50, 1199, 10, '2023-12-31 15:17:36'),
-(6, 'S', 50, 1499, 11, '2023-12-31 15:17:50'),
-(7, 'S', 50, 899, 12, '2024-01-03 12:27:31'),
-(8, 'M', 10, 999, 2, '2024-01-11 17:15:34'),
-(9, 'L', 10, 999, 2, '2024-01-12 04:32:05'),
-(10, 'XL', 10, 999, 2, '2024-01-12 04:32:15'),
-(11, 'S', 10, 999, 2, '2024-01-12 04:32:47'),
-(12, 'S', 10, 699, 3, '2024-01-24 14:07:53'),
-(13, 'M', 10, 699, 3, '2024-01-24 14:09:09'),
-(14, 'XL', 10, 699, 3, '2024-01-24 14:09:17'),
-(15, 'XXL', 10, 699, 3, '2024-01-24 14:09:25'),
-(16, 'S', 50, 1500, 7, '2024-01-24 14:09:49'),
-(17, 'M', 50, 1500, 7, '2024-01-24 14:09:59'),
-(18, 'XXL', 50, 1500, 7, '2024-01-24 14:10:16'),
-(19, 'S', 10, 899, 8, '2024-01-24 14:10:45'),
-(20, 'M', 10, 899, 8, '2024-01-24 14:10:57'),
-(21, 'XL', 10, 899, 8, '2024-01-24 14:11:08'),
-(22, 'XXL', 10, 899, 8, '2024-01-24 14:11:23'),
-(23, 'S', 10, 1299, 9, '2024-01-24 14:11:37'),
-(24, 'L', 10, 1299, 9, '2024-01-24 14:11:50'),
-(25, 'XL', 10, 1299, 9, '2024-01-24 14:12:05'),
-(38, 'XXL', 10, 1299, 9, '2024-01-24 14:12:18'),
-(39, 'S', 10, 1199, 10, '2024-01-24 14:12:40'),
-(40, 'M', 10, 1199, 10, '2024-01-24 14:12:52'),
-(41, 'M', 10, 1199, 10, '2024-01-24 14:13:06');
+(1, 'S', 10, 899, 1, '2023-12-30 07:43:42'),
+(2, 'M', 10, 999, 1, '2023-12-31 09:46:31'),
+(3, 'L', 10, 1199, 1, '2023-12-31 09:46:53'),
+(4, 'XL', 10, 1299, 1, '2023-12-31 09:47:19'),
+(5, 'XXL', 10, 1599, 1, '2023-12-31 09:47:36'),
+(6, 'S', 10, 1499, 17, '2023-12-31 09:47:50'),
+(7, 'M', 10, 1499, 17, '2024-01-03 06:57:31'),
+(8, 'L', 10, 1599, 17, '2024-01-11 11:45:34'),
+(9, 'XL', 10, 1699, 17, '2024-01-11 23:02:05'),
+(10, 'XXL', 10, 1999, 17, '2024-01-11 23:02:15'),
+(11, 'S', 10, 999, 2, '2024-01-11 23:02:47'),
+(12, 'M', 10, 699, 2, '2024-01-24 08:37:53'),
+(13, 'L', 10, 699, 2, '2024-01-24 08:39:09'),
+(14, 'XL', 10, 699, 2, '2024-01-24 08:39:17'),
+(15, 'XXL', 10, 699, 2, '2024-01-24 08:39:25'),
+(16, 'S', 10, 1500, 3, '2024-01-24 08:39:49'),
+(17, 'M', 10, 1500, 3, '2024-01-24 08:39:59'),
+(18, 'XXL', 10, 1500, 3, '2024-01-24 08:40:16'),
+(19, 'S', 10, 899, 4, '2024-01-24 08:40:45'),
+(20, 'M', 10, 899, 4, '2024-01-24 08:40:57'),
+(21, 'XL', 10, 899, 4, '2024-01-24 08:41:08'),
+(22, 'XXL', 10, 899, 4, '2024-01-24 08:41:23'),
+(23, 'S', 10, 1299, 19, '2024-01-24 08:41:37'),
+(24, 'L', 10, 1299, 19, '2024-01-24 08:41:50'),
+(25, 'XL', 10, 1299, 19, '2024-01-24 08:42:05'),
+(38, 'XXL', 10, 1299, 19, '2024-01-24 08:42:18'),
+(39, 'S', 10, 1199, 18, '2024-01-24 08:42:40'),
+(40, 'M', 10, 1199, 18, '2024-01-24 08:42:52'),
+(41, 'L', 10, 1199, 18, '2024-01-24 08:43:06');
 
 -- --------------------------------------------------------
 
@@ -262,10 +261,10 @@ INSERT INTO `tbl_specifications` (`id`, `size`, `quantity`, `price`, `pid`, `dat
 DROP TABLE IF EXISTS `tbl_users`;
 CREATE TABLE IF NOT EXISTS `tbl_users` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  `fname` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `lname` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `email` tinytext COLLATE utf8mb4_unicode_ci NOT NULL,
-  `secret` tinytext COLLATE utf8mb4_unicode_ci NOT NULL,
+  `fname` varchar(50) NOT NULL,
+  `lname` varchar(50) NOT NULL,
+  `email` tinytext NOT NULL,
+  `secret` tinytext NOT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -290,22 +289,16 @@ ALTER TABLE `pimage`
   ADD CONSTRAINT `pimage_ibfk_1` FOREIGN KEY (`pid`) REFERENCES `pmain` (`pid`);
 
 --
--- Constraints for table `pspecification`
---
-ALTER TABLE `pspecification`
-  ADD CONSTRAINT `pspecification_ibfk_1` FOREIGN KEY (`pid`) REFERENCES `pmain` (`pid`);
-
---
 -- Constraints for table `tbl_cart`
 --
 ALTER TABLE `tbl_cart`
-  ADD CONSTRAINT `tbl_cart_ibfk_1` FOREIGN KEY (`spec_id`) REFERENCES `tbl_specifications` (`id`);
+  ADD CONSTRAINT `tbl_cart_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `tbl_users` (`id`);
 
 --
 -- Constraints for table `tbl_specifications`
 --
 ALTER TABLE `tbl_specifications`
-  ADD CONSTRAINT `tbl_specifications_ibfk_1` FOREIGN KEY (`pid`) REFERENCES `pmain` (`pid`);
+  ADD CONSTRAINT `tbl_specifications_ibfk_1` FOREIGN KEY (`pid`) REFERENCES `tbl_products` (`id`);
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
