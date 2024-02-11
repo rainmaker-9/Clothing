@@ -15,17 +15,17 @@
             <img src="/static/{{product.thumbnail}}" alt="{{product.title}}" class="d-block w-100" />
           </div>
           <div class="col-9">
-            <h5>{{ product.title }}</h5>
-            <h4 class="fw-bold text-currency-before" id="product-price" data-original-price="{{ product.price }}">{{
+            <p class="fw-bold mb-0"><a href="#" class="link-danger">{{ product.title }}</a></p>
+            <p class="mb-0 text-currency-before" id="product-price" data-original-price="{{ product.price }}">{{
               product.price}}
-            </h4>
-            <p class="fw-bold">
+            </p>
+            <p class="mb-0">
               <span class="d-block">Size: {{ product.size }}</span>
             </p>
             <div class="col-md-8 col-xxl-4">
               <div class="d-flex mb-2 gap-2 align-items-center">
                 <label for="">Quantity</label>
-                <select class="form-select d-inline-block">
+                <select class="form-select form-select-sm" data-cart-item="{{product.spec}}">
                   {% if product.stock > 1 %}
                   {% for qnt in range(1, product.stock + 1) %}
                   <option value="{{qnt}}">{{qnt}}</option>
@@ -34,7 +34,7 @@
                 </select>
               </div>
             </div>
-            <a class="link-danger btn-remove-from-cart" href="#" data-cart-item="{{product.title}}">
+            <a class="link-danger small btn-remove-from-cart" href="#" data-cart-item="{{product.spec}}">
               <i class="fa-solid fa-trash-can me-2"></i>Remove</a>
           </div>
         </div>
@@ -67,10 +67,16 @@
               throw new Error(response.statusText)
             }
             response.json().then(result => {
-              alert(result.message)
-              if (result.status) {
-                location.reload();
-              }
+              Swal.fire({
+                title: result.status ? 'Success' : 'Error!',
+                text: result.message,
+                icon: result.status ? 'success' : 'error',
+                confirmButtonText: 'OK'
+              }).then(res => {
+                if (result.status) {
+                  location.reload();
+                }
+              })
             })
           })
         }
@@ -78,19 +84,19 @@
     })
   }
 
-  document.addEventListener('DOMContentLoaded', function () {
-    const quantitySelects = document.querySelectorAll('.form-select');
+  // document.addEventListener('DOMContentLoaded', function () {
+  //   const quantitySelects = document.querySelectorAll('.form-select');
 
-    quantitySelects.forEach(function (select) {
-      select.addEventListener('change', function () {
-        const productPriceElement = select.closest('.card').querySelector('#product-price');
-        const originalPrice = parseFloat(productPriceElement.getAttribute('data-original-price'));
-        const quantity = parseInt(select.value);
-        const newPrice = originalPrice * quantity;
+  //   quantitySelects.forEach(function (select) {
+  //     select.addEventListener('change', function () {
+  //       const productPriceElement = select.closest('.card').querySelector('#product-price');
+  //       const originalPrice = parseFloat(productPriceElement.getAttribute('data-original-price'));
+  //       const quantity = parseInt(select.value);
+  //       const newPrice = originalPrice * quantity;
 
-        productPriceElement.textContent = newPrice.toFixed(2);
-      });
-    });
-  });
+  //       productPriceElement.textContent = newPrice.toFixed(2);
+  //     });
+  //   });
+  // });
 </script>
 {% endblock %}

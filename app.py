@@ -47,7 +47,11 @@ def inject_cart_and_user():
 
 @app.route('/')
 def home():
-	return render_template('home.html')
+	cursor = cnx.cursor(dictionary=True)
+	query = "SELECT p.id, p.name as title, p.thumbnail, COUNT(DISTINCT s.size) as variants, s.price FROM tbl_products p RIGHT JOIN tbl_specifications s ON s.pid = p.id GROUP BY p.name"
+	cursor.execute(query)
+	products = cursor.fetchall()
+	return render_template('home.html', products = products)
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -90,6 +94,8 @@ def signup():
 	
 @app.route('/shop')
 def shop():
+	category = request.args.get('category')
+
 	cursor = cnx.cursor(dictionary=True)
 	query = "SELECT p.id, p.name as title, p.thumbnail, COUNT(DISTINCT s.size) as variants, s.price FROM tbl_products p RIGHT JOIN tbl_specifications s ON s.pid = p.id GROUP BY p.name"
 	cursor.execute(query)
@@ -116,6 +122,7 @@ def cart():
 					params = (p['spec'],)
 					cursor.execute(query, params)
 					product = cursor.fetchone()
+					product['spec'] = p['spec']
 					products.append(product)
 				return render_template('cart.html', cartProducts = products)
 			else:
@@ -127,7 +134,7 @@ def cart():
 
 @app.route('/checkout')
 def checkout():
-		cursor = mysql.connection.cursor()
+		cursor = cnx.cursor()
 		query = "SELECT DISTINCT addtocart.*,pimage.imgpath,pdetail.quantity as max FROM project.addtocart JOIN project.pimage ON pimage.pid = addtocart.pid JOIN project.pdetail ON pdetail.pid = addtocart.pid WHERE addtocart.email = %s"
 		val=(session['email'], )
 		cursor.execute(query, val)
@@ -138,14 +145,33 @@ def checkout():
 def removeFromCart():
 	cartItemId = int(request.form['cartItem'])
 	cursor = cnx.cursor()
-	query = "DELETE FROM project.addtocart WHERE addtocart.id = %s"
-	val=(cartItemId, )
-	cursor.execute(query, val)
-	cnx.commit()
-	if(cursor.rowcount > 0):
-		result={'status': True, 'message': 'Removed from cart'}
+	query = "SELECT product_info as products FROM tbl_cart WHERE user_id = %s"
+	cursor.execute(query, (session['user']['id'],))
+	productInfo = cursor.fetchone()
+	if productInfo != None:
+		productInfo = json.loads(productInfo[0])
+		idx = next((i for i, item in enumerate(productInfo) if item["spec"] == cartItemId), None)
+		if(idx != None):
+			if len(productInfo) == 1:
+				query = "DELETE FROM tbl_cart WHERE user_id = %s"
+				val=(session['user']['id'],)
+				cursor.execute(query, val)
+				cnx.commit()
+			else:
+				del productInfo[idx]
+				info = json.dumps(productInfo)
+				query = "UPDATE tbl_cart SET product_info = %s WHERE user_id = %s"
+				val=(info, session['user']['id'])
+				cursor.execute(query, val)
+				cnx.commit()
+			if(cursor.rowcount > 0):
+				result={'status': True, 'message': 'Removed from cart'}
+			else:
+				result={'status': False, 'message': 'Failed to remove from cart'}
+		else:
+			result={'status': False, 'message': 'Item not found'}
 	else:
-		result={'status': False, 'message': 'Failed to remove from cart'}
+		result={'status': False, 'message': 'Your cart is empty'}
 	return jsonify(result)
 
 @app.route('/checkoutpage', methods =['POST'] )
