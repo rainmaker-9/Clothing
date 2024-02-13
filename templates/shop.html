@@ -17,7 +17,7 @@
           <h4 class="text-currency-before">{{ product.price }}</h4>
           <p class="text-muted small mb-0">Available in {{ product.variants }} sizes</p>
         </div>
-        <a href="/product?id={{ product.id }}" class="stretched-link"></a>
+        <a href="{{ url_for('product', product_id=product.id) }}" class="stretched-link"></a>
       </div>
     </div>
     {% endfor %}

@@ -25,7 +25,7 @@ app.jinja_env.filters['urlquote'] = lambda u: quote(str(u)) if u else ''
 @app.context_processor
 def inject_cart_and_user():
 	cursor = cnx.cursor(buffered=True, dictionary=True)
-	query = "SELECT title FROM tbl_categories"
+	query = "SELECT id,title FROM tbl_categories"
 	cursor.execute(query)
 	categories = cursor.fetchall()
 	cursor.close()
@@ -95,14 +95,32 @@ def signup():
 @app.route('/shop')
 def shop():
 	category = request.args.get('category')
-
 	cursor = cnx.cursor(dictionary=True)
-	query = "SELECT p.id, p.name as title, p.thumbnail, COUNT(DISTINCT s.size) as variants, s.price FROM tbl_products p RIGHT JOIN tbl_specifications s ON s.pid = p.id GROUP BY p.name"
-	cursor.execute(query)
+	if category != None and str(category).strip() != '':
+		category = int(category)
+		query = "SELECT p.id, p.name as title, p.thumbnail, COUNT(DISTINCT s.size) as variants, s.price FROM tbl_products p RIGHT JOIN tbl_specifications s ON s.pid = p.id WHERE category = %s GROUP BY p.name"
+		cursor.execute(query, (category, ))
+	else:
+		query = "SELECT p.id, p.name as title, p.thumbnail, COUNT(DISTINCT s.size) as variants, s.price FROM tbl_products p RIGHT JOIN tbl_specifications s ON s.pid = p.id GROUP BY p.name"
+		cursor.execute(query)
 	products = cursor.fetchall()
 	cursor.close()
 	return render_template('shop.html', products = products)
 
+@app.route('/product/<int:product_id>')
+def product(product_id):
+	cursor = cnx.cursor(dictionary=True)
+	query = "SELECT id, name as title, description, thumbnail FROM tbl_products WHERE id = %s"
+	cursor.execute(query, (product_id, ))
+	product = cursor.fetchone()
+	cursor.close()
+	if len(product) > 0:
+		colors = [{"name": "Blue", "value": "blue"},{"name": "Black", "value": "black"},{"name": "Brown", "value": "brown"},{"name": "Red", "value": "red"}]
+		cursor = cnx.cursor(dictionary=True)
+		query = "SELECT id, size, quantity, price FROM tbl_specifications WHERE pid = %s"
+		cursor.execute(query, (product_id, ))
+		variants = cursor.fetchall()
+		return render_template('product.html', product = product, variants = variants, colors = colors)
 @app.route('/cart')
 def cart():
 	if session.get('user'):
