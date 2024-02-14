@@ -27,12 +27,6 @@
   align-items: center;
 }
 
-.text-currency-before::before {
-  content: "\20B9";
-  display: inline-block;
-  margin-right: 0.35rem;
-}
-
 body.swal2-height-auto {
   height: 100% !important;
 }

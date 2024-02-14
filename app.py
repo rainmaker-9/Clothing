@@ -3,10 +3,11 @@ from mysql.connector import MySQLConnection
 from flask_bcrypt import Bcrypt
 import json
 from urllib.parse import quote
-from markupsafe import Markup
+import locale
 
 app=Flask(__name__)
 bcrypt = Bcrypt(app)
+locale.setlocale(locale.LC_ALL, 'en_IN')
 
 config = {
 	"host": "localhost",
@@ -21,6 +22,7 @@ config = {
 cnx=MySQLConnection(**config)
 app.secret_key='Cloth'
 app.jinja_env.filters['urlquote'] = lambda u: quote(str(u)) if u else ''
+app.jinja_env.filters['currency_format'] = lambda v: locale.currency(v, grouping=True) if v else ''
 
 @app.context_processor
 def inject_cart_and_user():
@@ -38,14 +40,14 @@ def inject_cart_and_user():
 		cartData = cursor.fetchone()
 		cursor.close()
 		if cartData != None:
-			data = len(cartData)
+			data = len(json.loads(cartData['product_info']))
 		else:
 			data = 0
 		return dict(categories = categories, cartCount = data, user = user)
 	else:
 		return dict(categories = categories)
 
-@app.route('/')
+@app.route('/', methods=['GET'])
 def home():
 	cursor = cnx.cursor(dictionary=True)
 	query = "SELECT p.id, p.name as title, p.thumbnail, COUNT(DISTINCT s.size) as variants, s.price FROM tbl_products p RIGHT JOIN tbl_specifications s ON s.pid = p.id GROUP BY p.name"
@@ -92,7 +94,7 @@ def signup():
 		cnx.commit()
 		return render_template("form.html",fname=fname,lname=lname,email=email,pass1=pass1,pass2=pass2)
 	
-@app.route('/shop')
+@app.route('/shop', methods=['GET'])
 def shop():
 	category = request.args.get('category')
 	cursor = cnx.cursor(dictionary=True)
@@ -107,7 +109,7 @@ def shop():
 	cursor.close()
 	return render_template('shop.html', products = products)
 
-@app.route('/product/<int:product_id>')
+@app.route('/product/<int:product_id>', methods=['GET'])
 def product(product_id):
 	cursor = cnx.cursor(dictionary=True)
 	query = "SELECT id, name as title, description, thumbnail FROM tbl_products WHERE id = %s"
@@ -117,30 +119,47 @@ def product(product_id):
 	if len(product) > 0:
 		colors = [{"name": "Blue", "value": "blue"},{"name": "Black", "value": "black"},{"name": "Brown", "value": "brown"},{"name": "Red", "value": "red"}]
 		cursor = cnx.cursor(dictionary=True)
-		query = "SELECT id, size, quantity, price FROM tbl_specifications WHERE pid = %s"
+		query = "SELECT id, size FROM tbl_specifications WHERE pid = %s"
 		cursor.execute(query, (product_id, ))
 		variants = cursor.fetchall()
 		return render_template('product.html', product = product, variants = variants, colors = colors)
-@app.route('/cart')
+	
+@app.route('/get-product-price', methods =['POST'])
+def get_product_price():
+	spec = request.form.get('spec-id')
+	if spec != None and spec.strip() != '':
+		cursor = cnx.cursor(dictionary=True)
+		query = "SELECT quantity, price FROM tbl_specifications WHERE id = %s"
+		cursor.execute(query, (spec, ))
+		variant = cursor.fetchone()
+		if variant != None:
+			return jsonify({"status": True, "qnt": variant['quantity'], "amt": locale.currency(variant['price'], grouping=True)})
+		else:
+			return jsonify({"status": False, "message": "Product variant unavailable"})
+	else:
+		return jsonify({"status": False, "message": "Invalid request"})
+
+@app.route('/cart', methods=['GET'])
 def cart():
 	if session.get('user'):
-		cursor = cnx.cursor()
+		cursor = cnx.cursor(dictionary=True)
 		query = "SELECT product_info FROM tbl_cart WHERE user_id = %s"
 		params = (session['user']['id'],)
 		cursor.execute(query, params)
 		data = cursor.fetchone()
 		if data != None:
-			product_info = json.loads(data[0])
+			product_info = json.loads(data['product_info'])
 			cursor.close()
 			if len(product_info) > 0:
 				products = []
 				for p in product_info:
 					cursor = cnx.cursor(dictionary=True)
-					query = "SELECT p.name as title, p.thumbnail, s.size, s.price, s.quantity as stock FROM tbl_products p INNER JOIN tbl_specifications s ON s.pid = p.id WHERE s.id = %s"
+					query = "SELECT p.id, p.name as title, p.thumbnail, s.size, s.price, s.quantity as stock FROM tbl_products p INNER JOIN tbl_specifications s ON s.pid = p.id WHERE s.id = %s"
 					params = (p['spec'],)
 					cursor.execute(query, params)
 					product = cursor.fetchone()
 					product['spec'] = p['spec']
+					product['color'] = p['color']
 					products.append(product)
 				return render_template('cart.html', cartProducts = products)
 			else:
@@ -149,26 +168,69 @@ def cart():
 			return render_template('cart.html', cartProducts = 0)
 	else:
 		return redirect('/login')
+	
+@app.route('/add-to-cart', methods=['POST'])
+def add_to_cart():
+	if session.get('user'):
+		variant = request.form.get('variant')
+		color = request.form.get('color')
+		if variant != None and variant.strip() != '' and color != None and color.strip() != '':
+			cartItem = {'spec': variant, 'color': color}
+			cursor = cnx.cursor(dictionary=True, buffered=True)
+			query = "SELECT product_info FROM tbl_cart WHERE user_id = %s"
+			params = (session['user']['id'], )
+			cursor.execute(query, params)
+			products = cursor.fetchone()
+			if products != None:
+				products = json.loads(products['product_info'])
+				for product in products:
+					if product['spec'] == cartItem['spec'] and product['color'] == cartItem['color']:
+						return jsonify({"status": False, "message": "Product is already in the cart."})
+				products.append(cartItem)
+				query = "UPDATE tbl_cart SET product_info = %s WHERE user_id = %s"
+				params = (json.dumps(products), session['user']['id'])
+				cursor.execute(query, params)
+				cnx.commit()
+			else:
+				query = "INSERT INTO tbl_cart (product_info, user_id) VALUES (%s, %s)"
+				product = json.dumps([cartItem])
+				params = (product, session['user']['id'])
+				cursor.execute(query, params)
+				cnx.commit()
+			return jsonify({"status": True if cursor.rowcount > 0 else False, "message": "Added to cart." if cursor.rowcount > 0 else "Failed to add to cart."})
+	else:
+		return make_response(jsonify({"status": False, "message": "You must be logged in."})), 401
+	
+@app.route('/get-calc-product-price', methods=['POST'])
+def get_calc_product_price():
+	spec = request.form.get('spec-id')
+	qnt = int(request.form.get('quantity'))
+	if spec != None and spec.strip() != '':
+		cursor = cnx.cursor(dictionary=True)
+		query = "SELECT quantity, price FROM tbl_specifications WHERE id = %s"
+		cursor.execute(query, (spec, ))
+		variant = cursor.fetchone()
+		if variant != None:
+			if qnt <= int(variant['quantity']):
+				price = qnt * variant['price']
+				return jsonify({"status": True, "price": locale.currency(price, grouping=True)})
+			else:
+				return jsonify({"status": False, "message": "Invalid product quantity"})
+		else:
+			return jsonify({"status": False, "message": "Product variant unavailable"})
+	else:
+		return jsonify({"status": False, "message": "Invalid request"})
 
-@app.route('/checkout')
-def checkout():
-		cursor = cnx.cursor()
-		query = "SELECT DISTINCT addtocart.*,pimage.imgpath,pdetail.quantity as max FROM project.addtocart JOIN project.pimage ON pimage.pid = addtocart.pid JOIN project.pdetail ON pdetail.pid = addtocart.pid WHERE addtocart.email = %s"
-		val=(session['email'], )
-		cursor.execute(query, val)
-		data=cursor.fetchall()
-		return render_template('checkout.html', cartItems=jsonify(data).json)
-
-@app.route('/remove-cart-item', methods =['POST'] )
+@app.route('/remove-cart-item', methods =['POST'])
 def removeFromCart():
 	cartItemId = int(request.form['cartItem'])
-	cursor = cnx.cursor()
+	cursor = cnx.cursor(dictionary=True)
 	query = "SELECT product_info as products FROM tbl_cart WHERE user_id = %s"
 	cursor.execute(query, (session['user']['id'],))
 	productInfo = cursor.fetchone()
 	if productInfo != None:
-		productInfo = json.loads(productInfo[0])
-		idx = next((i for i, item in enumerate(productInfo) if item["spec"] == cartItemId), None)
+		productInfo = json.loads(productInfo['products'])
+		idx = next((i for i, item in enumerate(productInfo) if int(item["spec"]) == cartItemId), None)
 		if(idx != None):
 			if len(productInfo) == 1:
 				query = "DELETE FROM tbl_cart WHERE user_id = %s"

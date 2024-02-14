@@ -8,34 +8,37 @@
   <div class="row justify-content-center">
     {% if cartProducts %}
     {% for product in cartProducts %}
-    <div class="col-md-6">
+    <div class="col-md-6 col-xl-5 col-xxl-4">
       <div class="card card-body shadow border-0">
         <div class="row g-3">
-          <div class="col-3">
+          <div class="col-3 col-md-4">
             <img src="/static/{{product.thumbnail}}" alt="{{product.title}}" class="d-block w-100" />
           </div>
-          <div class="col-9">
-            <p class="fw-bold mb-0"><a href="#" class="link-danger">{{ product.title }}</a></p>
-            <p class="mb-0 text-currency-before" id="product-price" data-original-price="{{ product.price }}">{{
-              product.price}}
-            </p>
-            <p class="mb-0">
-              <span class="d-block">Size: {{ product.size }}</span>
-            </p>
-            <div class="col-md-8 col-xxl-4">
-              <div class="d-flex mb-2 gap-2 align-items-center">
-                <label for="">Quantity</label>
-                <select class="form-select form-select-sm" data-cart-item="{{product.spec}}">
-                  {% if product.stock > 1 %}
-                  {% for qnt in range(1, product.stock + 1) %}
-                  <option value="{{qnt}}">{{qnt}}</option>
-                  {% endfor %}
-                  {% endif %}
-                </select>
+          <div class="col-9 col-md-8">
+            <div class="d-flex flex-column justify-content-between h-100">
+              <div>
+                <div class="d-flex justify-content-between align-items-center">
+                  <p class="fw-bold mb-0"><a href="#" class="link-danger">{{ product.title }}</a></p>
+                  <a class="link-danger small btn-remove-from-cart" href="#" data-cart-item="{{product.spec}}">
+                    <i class="fa-solid fa-trash-can"></i></a>
+                </div>
+                <p class="mb-0" id="product-price">{{ product.price|currency_format }}</p>
+                <p class="mb-0">Size: {{ product.size }}</p>
+                <p class="mb-0">Color: {{ product.color }}</p>
+              </div>
+              <div class="col-md-8 col-xxl-6">
+                <div class="d-flex gap-2 align-items-center">
+                  <label for="">Quantity</label>
+                  <select class="form-select form-select-sm" data-cart-item="{{product.spec}}">
+                    {% if product.stock > 1 %}
+                    {% for qnt in range(1, product.stock + 1) %}
+                    <option value="{{qnt}}">{{qnt}}</option>
+                    {% endfor %}
+                    {% endif %}
+                  </select>
+                </div>
               </div>
             </div>
-            <a class="link-danger small btn-remove-from-cart" href="#" data-cart-item="{{product.spec}}">
-              <i class="fa-solid fa-trash-can me-2"></i>Remove</a>
           </div>
         </div>
       </div>
@@ -85,19 +88,37 @@
     })
   }
 
-  // document.addEventListener('DOMContentLoaded', function () {
-  //   const quantitySelects = document.querySelectorAll('.form-select');
+  document.addEventListener('DOMContentLoaded', function () {
+    const quantitySelects = document.querySelectorAll('.form-select');
 
-  //   quantitySelects.forEach(function (select) {
-  //     select.addEventListener('change', function () {
-  //       const productPriceElement = select.closest('.card').querySelector('#product-price');
-  //       const originalPrice = parseFloat(productPriceElement.getAttribute('data-original-price'));
-  //       const quantity = parseInt(select.value);
-  //       const newPrice = originalPrice * quantity;
-
-  //       productPriceElement.textContent = newPrice.toFixed(2);
-  //     });
-  //   });
-  // });
+    quantitySelects.forEach(function (select) {
+      select.addEventListener('change', function (e) {
+        const productPrice = select.closest('.card').querySelector('#product-price');
+        if (productPrice && e.target.dataset.cartItem && e.target.value) {
+          const data = new FormData;
+          data.append('spec-id', e.target.dataset.cartItem)
+          data.append('quantity', e.target.value)
+          fetch('/get-calc-product-price', { method: "POST", body: data }).then(response => {
+            if (!response.ok) throw new Error(response.statusText)
+            response.json().then(result => {
+              if (result.status) {
+                productPrice.textContent = result.price;
+              } else {
+                Swal.fire({
+                  title: 'Error!',
+                  text: result.message,
+                  icon: 'error',
+                  confirmButtonText: 'OK'
+                }).then(() => {
+                  e.target.value = '1'
+                  e.target.dispatchEvent(new Event('change'))
+                })
+              }
+            })
+          })
+        }
+      });
+    });
+  });
 </script>
 {% endblock %}

@@ -48,3 +48,19 @@ if (window.Swal) {
     });
   }
 }
+
+const disableFields = (fields, val) => {
+  fields.forEach((field) => {
+    if (val) {
+      field.setAttribute("disabled", "");
+    } else {
+      field.removeAttribute("disabled");
+    }
+  });
+};
+
+const removeAllChildNodes = (parent) => {
+  while (parent.firstChild) {
+    parent.removeChild(parent.firstChild);
+  }
+};

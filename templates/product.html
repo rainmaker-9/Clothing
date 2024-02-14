@@ -111,14 +111,14 @@
 <div class="container py-3 py-md-5">
   <div class="row g-4">
     {% if product %}
-    <div class="col-md-4">
+    <div class="col-md-5 col-lg-4">
       <img src="/static/{{ product.thumbnail }}" alt="{{ product.title }}" class="w-100 d-block">
     </div>
-    <div class="col-md-8">
-      <form action="">
+    <div class="col-md-7 col-lg-8">
+      <form id="frmAddToCart">
         <div class="card border-0 shadow">
           <div class="card-body">
-            <div class="row gy-4">
+            <div class="row gy-md-3 gy-lg-4">
               <div class="col-12">
                 <h3 class="display-5">{{ product.title }}</h3>
               </div>
@@ -131,15 +131,16 @@
                 <div class="d-flex gap-3">
                   {% for variant in variants %}
                   <div class="size-input-radio">
-                    <input class="form-check-input" type="radio" id="size-{{ variant.size }}" value="{{ variant.size }}"
-                      name="variant" />
+                    <input class="form-check-input" type="radio" id="size-{{ variant.size }}" value="{{ variant.id }}"
+                      name="variant" required />
                     <label class="form-check-label" for="size-{{ variant.size }}">{{ variant.size }}</label>
                   </div>
                   {% endfor %}
                 </div>
+                <small id="available-stock" class="text-muted d-block mt-2"></small>
               </div>
-              <div class="col-12">
-                <small class="text-muted">Select size to view price</small>
+              <div class="col-12 text-muted small" id="price-container">
+                Select size to view price
               </div>
               {% endif %}
               {% if colors|length %}
@@ -148,20 +149,18 @@
                 <div class="d-flex gap-3">
                   {% for color in colors %}
                   <div class="color-input-radio {{ color.value }}">
-                    <input type="radio" id="color-{{ color.value }}" value="{{ color.value }}" name="color" />
+                    <input type="radio" id="color-{{ color.value }}" value="{{ color.name }}" name="color" required />
                   </div>
                   {% endfor %}
                 </div>
               </div>
               {% endif %}
-              <div class="col-12">
+              <div class="col-12 d-none" id="cta-buttons-container">
                 <div class="d-flex gap-3">
-                  <button type="submit" class="btn btn-danger rounded-1"><i class="fa-solid fa-cart-plus me-2"></i>Add
-                    to
-                    Cart</button>
-                  <button type="button" class="btn btn-primary rounded-1"><i
-                      class="fa-solid fa-cart-flatbed me-2"></i>Buy
-                    Now!</button>
+                  <button type="submit" class="btn btn-danger rounded-1 flex-grow-1 flex-lg-grow-0">
+                    <i class="fa-solid fa-cart-plus me-2"></i>Add to Cart</button>
+                  <button type="button" class="btn btn-warning rounded-1 flex-grow-1 flex-lg-grow-0">
+                    <i class="fa-solid fa-cart-flatbed me-2"></i>Buy Now!</button>
                 </div>
               </div>
             </div>
@@ -176,4 +175,79 @@
     {% endif %}
   </div>
 </div>
+{% endblock %}
+{% block scripts %}
+<script>
+  const priceContainer = document.querySelector('#price-container')
+  const availableStock = document.querySelector('#available-stock')
+  const ctaButtonsContainer = document.querySelector('#cta-buttons-container');
+
+  const frmAddToCart = document.querySelector('#frmAddToCart')
+  if (frmAddToCart) {
+    frmAddToCart.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const data = new FormData(e.target)
+      fetch('/add-to-cart', { method: "POST", body: data }).then(response => {
+        if (response.status === 401) location.replace('/login')
+        if (!response.ok && response.status !== 401) throw new Error(response.statusText)
+        if (response.ok && response.status === 200) {
+          response.json().then(result => {
+            Swal.fire({
+              title: result.status ? 'Success' : 'Error!',
+              text: result.message,
+              icon: result.status ? 'success' : 'error',
+              confirmButtonText: 'OK'
+            }).then(res => {
+              if (result.status) {
+                location.reload();
+              }
+            })
+          })
+        }
+      })
+    })
+  }
+
+  const sizeButtons = document.querySelectorAll('.size-input-radio input[type="radio"]')
+  if (sizeButtons.length) {
+    sizeButtons.forEach(button => {
+      button.addEventListener('change', (e) => {
+        if (e.target.checked) {
+          const data = new FormData;
+          data.append('spec-id', e.target.value)
+          fetch('/get-product-price', { method: "POST", body: data }).then(response => {
+            if (!response.ok) throw new Error(response.statusText)
+            response.json().then(result => {
+              if (result.status) {
+                removeAllChildNodes(priceContainer)
+                priceContainer.classList.remove('text-muted', 'small')
+                priceContainer.classList.add('display-6')
+                priceContainer.textContent = result.amt
+                if (result.qnt) {
+                  ctaButtonsContainer.classList.remove('d-none')
+                  availableStock.textContent = `${result.qnt} items left.`
+                  availableStock.classList.remove('text-danger', 'fs-5')
+                  availableStock.classList.add('text-muted', 'small')
+                } else {
+                  ctaButtonsContainer.classList.add('d-none')
+                  availableStock.classList.remove('text-muted', 'small')
+                  availableStock.classList.add('text-danger', 'fs-5')
+                  availableStock.textContent = `Currently unavailable`
+                }
+              } else {
+                priceContainer.classList.remove('display-6')
+                priceContainer.classList.add('text-muted', 'small')
+                priceContainer.textContent = 'Select size to view price'
+                availableStock.textContent = ''
+                if (!ctaButtonsContainer.classList.contains('d-none')) {
+                  ctaButtonsContainer.classList.add('d-none')
+                }
+              }
+            })
+          })
+        }
+      })
+    })
+  }
+</script>
 {% endblock %}

@@ -3,8 +3,8 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3307
--- Generation Time: Feb 13, 2024 at 01:12 PM
--- Server version: 10.6.5-MariaDB
+-- Generation Time: Feb 14, 2024 at 08:01 AM
+-- Server version: 11.2.2-MariaDB
 -- PHP Version: 8.2.13
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
@@ -31,11 +31,18 @@ USE `clothing_store`;
 
 DROP TABLE IF EXISTS `tbl_cart`;
 CREATE TABLE IF NOT EXISTS `tbl_cart` (
-  `product_info` text COLLATE utf8mb4_unicode_ci NOT NULL,
+  `product_info` text NOT NULL,
   `user_id` int(11) DEFAULT NULL,
   `date` timestamp NOT NULL DEFAULT current_timestamp(),
   KEY `user_id` (`user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `tbl_cart`
+--
+
+INSERT INTO `tbl_cart` (`product_info`, `user_id`, `date`) VALUES
+('[{\"spec\": \"8\", \"color\": \"Red\"}]', 1, '2024-02-14 07:25:51');
 
 -- --------------------------------------------------------
 
@@ -46,7 +53,7 @@ CREATE TABLE IF NOT EXISTS `tbl_cart` (
 DROP TABLE IF EXISTS `tbl_categories`;
 CREATE TABLE IF NOT EXISTS `tbl_categories` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  `title` tinytext COLLATE utf8mb4_unicode_ci NOT NULL,
+  `title` tinytext NOT NULL,
   `date` timestamp NOT NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -73,9 +80,9 @@ INSERT INTO `tbl_categories` (`id`, `title`, `date`) VALUES
 DROP TABLE IF EXISTS `tbl_products`;
 CREATE TABLE IF NOT EXISTS `tbl_products` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  `name` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `description` text COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `thumbnail` tinytext COLLATE utf8mb4_unicode_ci NOT NULL,
+  `name` varchar(100) DEFAULT NULL,
+  `description` text DEFAULT NULL,
+  `thumbnail` tinytext NOT NULL,
   `category` int(11) DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `categories_category` (`category`)
@@ -104,14 +111,14 @@ INSERT INTO `tbl_products` (`id`, `name`, `description`, `thumbnail`, `category`
 DROP TABLE IF EXISTS `tbl_specifications`;
 CREATE TABLE IF NOT EXISTS `tbl_specifications` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  `size` varchar(30) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `size` varchar(30) NOT NULL,
   `quantity` int(11) NOT NULL,
   `price` int(11) NOT NULL,
   `pid` int(11) DEFAULT NULL,
   `date` timestamp NOT NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`id`),
   KEY `pid` (`pid`)
-) ENGINE=InnoDB AUTO_INCREMENT=42 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=30 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Dumping data for table `tbl_specifications`
@@ -143,10 +150,10 @@ INSERT INTO `tbl_specifications` (`id`, `size`, `quantity`, `price`, `pid`, `dat
 (23, 'S', 10, 1299, 7, '2024-01-24 08:41:37'),
 (24, 'L', 10, 1299, 7, '2024-01-24 08:41:50'),
 (25, 'XL', 10, 1299, 7, '2024-01-24 08:42:05'),
-(38, 'XXL', 10, 1299, 7, '2024-01-24 08:42:18'),
-(39, 'S', 10, 1199, 6, '2024-01-24 08:42:40'),
-(40, 'M', 10, 1199, 6, '2024-01-24 08:42:52'),
-(41, 'L', 10, 1199, 6, '2024-01-24 08:43:06');
+(26, 'XXL', 10, 1299, 7, '2024-01-24 08:42:18'),
+(27, 'S', 10, 1199, 6, '2024-01-24 08:42:40'),
+(28, 'M', 10, 1299, 6, '2024-01-24 08:42:52'),
+(29, 'L', 10, 1399, 6, '2024-01-24 08:43:06');
 
 -- --------------------------------------------------------
 
@@ -157,10 +164,10 @@ INSERT INTO `tbl_specifications` (`id`, `size`, `quantity`, `price`, `pid`, `dat
 DROP TABLE IF EXISTS `tbl_users`;
 CREATE TABLE IF NOT EXISTS `tbl_users` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  `fname` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `lname` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `email` tinytext COLLATE utf8mb4_unicode_ci NOT NULL,
-  `secret` tinytext COLLATE utf8mb4_unicode_ci NOT NULL,
+  `fname` varchar(50) NOT NULL,
+  `lname` varchar(50) NOT NULL,
+  `email` tinytext NOT NULL,
+  `secret` tinytext NOT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
