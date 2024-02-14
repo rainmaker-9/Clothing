@@ -70,13 +70,16 @@
                 </a>
                 <ul class="dropdown-menu dropdown-menu-end dropdown-menu-lg-start">
                   <li>
-                    <h6 class="dropdown-header mb-0">{{ user.name }}</h6>
-                    <h6 class="dropdown-header">{{ user.email }}</h6>
+                    <h6 class="dropdown-header">Hello {{ user.name }}</h6>
                   </li>
                   <li class="dropdown-divider"></li>
                   <li>
-                    <a class="dropdown-item" href="#" onclick="logout(event)"><i
-                        class="fa-solid fa-sign-out-alt me-2"></i>Logout</a>
+                    <a class="dropdown-item" href="{{ url_for('profile') }}">
+                      <i class="fa-solid fa-user fa-fw me-2"></i>Profile</a>
+                  </li>
+                  <li>
+                    <a class="dropdown-item" href="#" onclick="logout(event)">
+                      <i class="fa-solid fa-sign-out-alt fa-fw me-2"></i>Logout</a>
                   </li>
                 </ul>
               </li>

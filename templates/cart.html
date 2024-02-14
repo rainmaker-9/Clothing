@@ -5,7 +5,7 @@
 {% endblock %}
 {% block content %}
 <div class="container py-3 py-md-5">
-  <div class="row justify-content-center">
+  <form id="frmCheckout" class="row g-3">
     {% if cartProducts %}
     {% for product in cartProducts %}
     <div class="col-md-6 col-xl-5 col-xxl-4">
@@ -18,7 +18,8 @@
             <div class="d-flex flex-column justify-content-between h-100">
               <div>
                 <div class="d-flex justify-content-between align-items-center">
-                  <p class="fw-bold mb-0"><a href="#" class="link-danger">{{ product.title }}</a></p>
+                  <p class="fw-bold mb-0"><a href="{{ url_for('product', product_id=product.id) }}"
+                      class="link-danger">{{ product.title }}</a></p>
                   <a class="link-danger small btn-remove-from-cart" href="#" data-cart-item="{{product.spec}}">
                     <i class="fa-solid fa-trash-can"></i></a>
                 </div>
@@ -44,6 +45,15 @@
       </div>
     </div>
     {% endfor %}
+    <div class="col-12">
+      {% if addressCount %}
+      <button type="submit" class="btn btn-primary btn-lg rounded-1">
+        <i class="fa-solid fa-cart-arrow-down me-2"></i>Checkout</button>
+      {% else %}
+      <p class="mb-0 lead">You have not added any shipping address yet. <a class="link-danger"
+          href="{{ url_for('profile') }}">Click here to add one</a></p>
+      {% endif %}
+    </div>
     {% else %}
     <div class="col-12 text-center">
       <h1 class="text-danger"><i class="fa-solid fa-sad-tear"></i></h1>
@@ -52,7 +62,7 @@
           class="fa-solid fa-store-alt me-2"></i>Shop now!</a>
     </div>
     {% endif %}
-  </div>
+  </form>
 </div>
 {% endblock %}
 {% block scripts %}
@@ -60,37 +70,39 @@
   const removeFromCartButtons = document.querySelectorAll('.btn-remove-from-cart')
   if (removeFromCartButtons.length) {
     removeFromCartButtons.forEach(button => {
-      button.addEventListener('click', (e) => {
+      button.addEventListener('click', async (e) => {
         e.preventDefault();
         const cartItem = e.currentTarget.dataset.cartItem;
-        const data = new FormData;
-        data.append('cartItem', cartItem)
         if (cartItem) {
-          fetch('/remove-cart-item', { method: "POST", body: data }).then(response => {
-            if (!response.ok) {
-              throw new Error(response.statusText)
-            }
-            response.json().then(result => {
-              Swal.fire({
-                title: result.status ? 'Success' : 'Error!',
-                text: result.message,
-                icon: result.status ? 'success' : 'error',
-                confirmButtonText: 'OK'
-              }).then(res => {
-                if (result.status) {
-                  location.reload();
-                }
+          const confirm = await showConfirm('Are you sure', 'Are you sure you want to remove this product from cart?', 'Yes', 'danger', 'No', 'secondary')
+          if (confirm.isConfirmed) {
+            const data = new FormData;
+            data.append('cartItem', cartItem)
+            fetch('/remove-cart-item', { method: "POST", body: data }).then(response => {
+              if (!response.ok) {
+                throw new Error(response.statusText)
+              }
+              response.json().then(result => {
+                Swal.fire({
+                  title: result.status ? 'Success' : 'Error!',
+                  text: result.message,
+                  icon: result.status ? 'success' : 'error',
+                  confirmButtonText: 'OK'
+                }).then(res => {
+                  if (result.status) {
+                    location.reload();
+                  }
+                })
               })
             })
-          })
+          }
         }
       })
     })
   }
 
-  document.addEventListener('DOMContentLoaded', function () {
-    const quantitySelects = document.querySelectorAll('.form-select');
-
+  const quantitySelects = document.querySelectorAll('.form-select');
+  if (quantitySelects.length) {
     quantitySelects.forEach(function (select) {
       select.addEventListener('change', function (e) {
         const productPrice = select.closest('.card').querySelector('#product-price');
@@ -119,6 +131,33 @@
         }
       });
     });
-  });
+  }
+
+  const frmCheckout = document.querySelector('#frmCheckout')
+
+  if (frmCheckout) {
+    frmCheckout.addEventListener('submit', (e) => {
+      e.preventDefault();
+      if (quantitySelects.length) {
+        const data = new FormData;
+        const products = [];
+        quantitySelects.forEach(select => {
+          const prod = new Product(select.dataset.cartItem, select.value)
+          products.push(prod);
+        })
+        data.append('cart-items', JSON.stringify(products))
+        fetch('/checkout', { method: "POST", body: data }).then(response => {
+
+        })
+      }
+    })
+  }
+
+  function Product(spec_id, quantity) {
+    return {
+      spec: spec_id,
+      qnt: quantity
+    }
+  }
 </script>
 {% endblock %}

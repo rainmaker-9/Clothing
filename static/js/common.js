@@ -27,6 +27,30 @@ if (window.Swal) {
     });
   }
 
+  function showConfirm(
+    title,
+    message,
+    confirmButtonText,
+    confirmButtonStyle,
+    cancelButtonText,
+    cancelButtonStyle,
+    icon = "question"
+  ) {
+    return Swal.fire({
+      title: title,
+      text: message,
+      icon: icon,
+      confirmButtonText: confirmButtonText,
+      cancelButtonText: cancelButtonText,
+      buttonsStyling: false,
+      showCancelButton: true,
+      customClass: {
+        confirmButton: `btn btn-${confirmButtonStyle}`,
+        cancelButton: `btn btn-${cancelButtonStyle}`,
+      },
+    });
+  }
+
   function logout(e) {
     e.preventDefault();
     Swal.fire({

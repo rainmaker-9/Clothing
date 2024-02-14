@@ -78,6 +78,46 @@ def login():
 			return redirect('/shop')
 		else:
 			return render_template('login.html')
+		
+@app.route('/profile', methods=['GET'])
+def profile():
+	if session.get('user'):
+		cursor = cnx.cursor(dictionary=True)
+		cursor.execute("SELECT COUNT(id) as addressCount from tbl_addresses WHERE user_id = %s", (session['user']['id'], ))
+		addressCount = cursor.fetchone()['addressCount']
+		cursor.close()
+		user = {'name': session['user']['name'], 'email': session['user']['email']}
+		addressCount = int(addressCount)
+		if addressCount > 0:
+			cursor = cnx.cursor(dictionary=True)
+			cursor.execute("SELECT * from tbl_addresses WHERE user_id = %s", (session['user']['id'], ))
+			addresses = cursor.fetchall()
+			cursor.close()
+			return render_template('profile.html', user = user, addressCount = addressCount, addresses= addresses)
+		return render_template('profile.html', user = user, addressCount = addressCount)
+	else:
+		return redirect('/shop')
+
+@app.route('/add-address', methods=['POST'])
+def add_address():
+	if session.get('user'):
+		title = request.form['address_title']
+		full = request.form['address_full']
+		city = request.form['address_city']
+		state = request.form['address_state']
+		pincode = request.form['address_pincode']
+		contact = request.form['address_contact']
+		if title.strip() != '' and full.strip() != '' and city.strip() != '' and state.strip() != '' and pincode.strip() != '' and contact.strip() != '':
+			cursor = cnx.cursor(dictionary=True, buffered=True)
+			query = "INSERT INTO tbl_addresses (title, full, city, state, pincode, contact, user_id) VALUES (%s,%s,%s,%s,%s,%s,%s)"
+			params = (title, full, city, state, pincode, contact, session['user']['id'])
+			cursor.execute(query, params)
+			cnx.commit()
+			count = cursor.rowcount
+			cursor.close()
+			return jsonify({"status": True if count > 0 else False, "message": "Address added." if count > 0 else "Failed to add address."})
+	else:
+		return make_response(jsonify({"status": False, "message": "You must be logged in."})), 401
 
 @app.route('/signup', methods=['POST'])
 def signup():
@@ -151,9 +191,11 @@ def cart():
 			product_info = json.loads(data['product_info'])
 			cursor.close()
 			if len(product_info) > 0:
+				cursor = cnx.cursor(dictionary=True, buffered=True)
+				cursor.execute("SELECT COUNT(id) as addressCount from tbl_addresses WHERE user_id = %s", (session['user']['id'], ))
+				addressCount = cursor.fetchone()['addressCount']
 				products = []
 				for p in product_info:
-					cursor = cnx.cursor(dictionary=True)
 					query = "SELECT p.id, p.name as title, p.thumbnail, s.size, s.price, s.quantity as stock FROM tbl_products p INNER JOIN tbl_specifications s ON s.pid = p.id WHERE s.id = %s"
 					params = (p['spec'],)
 					cursor.execute(query, params)
@@ -161,7 +203,8 @@ def cart():
 					product['spec'] = p['spec']
 					product['color'] = p['color']
 					products.append(product)
-				return render_template('cart.html', cartProducts = products)
+				cursor.close()
+				return render_template('cart.html', cartProducts = products, addressCount = addressCount)
 			else:
 				return render_template('cart.html', cartProducts = 0)
 		else:
@@ -175,29 +218,38 @@ def add_to_cart():
 		variant = request.form.get('variant')
 		color = request.form.get('color')
 		if variant != None and variant.strip() != '' and color != None and color.strip() != '':
-			cartItem = {'spec': variant, 'color': color}
 			cursor = cnx.cursor(dictionary=True, buffered=True)
-			query = "SELECT product_info FROM tbl_cart WHERE user_id = %s"
-			params = (session['user']['id'], )
-			cursor.execute(query, params)
-			products = cursor.fetchone()
-			if products != None:
-				products = json.loads(products['product_info'])
-				for product in products:
-					if product['spec'] == cartItem['spec'] and product['color'] == cartItem['color']:
-						return jsonify({"status": False, "message": "Product is already in the cart."})
-				products.append(cartItem)
-				query = "UPDATE tbl_cart SET product_info = %s WHERE user_id = %s"
-				params = (json.dumps(products), session['user']['id'])
-				cursor.execute(query, params)
-				cnx.commit()
+			query = "SELECT quantity FROM tbl_specifications WHERE id = %s"
+			cursor.execute(query, (variant, ))
+			specs = cursor.fetchone()
+			if specs != None:
+				if int(specs['quantity']) > 0:
+					cartItem = {'spec': variant, 'color': color}
+					query = "SELECT product_info FROM tbl_cart WHERE user_id = %s"
+					params = (session['user']['id'], )
+					cursor.execute(query, params)
+					products = cursor.fetchone()
+					if products != None:
+						products = json.loads(products['product_info'])
+						for product in products:
+							if product['spec'] == cartItem['spec'] and product['color'] == cartItem['color']:
+								return jsonify({"status": False, "message": "Product is already in the cart."})
+						products.append(cartItem)
+						query = "UPDATE tbl_cart SET product_info = %s WHERE user_id = %s"
+						params = (json.dumps(products), session['user']['id'])
+						cursor.execute(query, params)
+						cnx.commit()
+					else:
+						query = "INSERT INTO tbl_cart (product_info, user_id) VALUES (%s, %s)"
+						product = json.dumps([cartItem])
+						params = (product, session['user']['id'])
+						cursor.execute(query, params)
+						cnx.commit()
+					return jsonify({"status": True if cursor.rowcount > 0 else False, "message": "Added to cart." if cursor.rowcount > 0 else "Failed to add to cart."})
+				else:
+					return jsonify({"status": False, "message": "Product currently unavailable."})
 			else:
-				query = "INSERT INTO tbl_cart (product_info, user_id) VALUES (%s, %s)"
-				product = json.dumps([cartItem])
-				params = (product, session['user']['id'])
-				cursor.execute(query, params)
-				cnx.commit()
-			return jsonify({"status": True if cursor.rowcount > 0 else False, "message": "Added to cart." if cursor.rowcount > 0 else "Failed to add to cart."})
+				return jsonify({"status": False, "message": "Something went wrong."})
 	else:
 		return make_response(jsonify({"status": False, "message": "You must be logged in."})), 401
 	
@@ -254,9 +306,9 @@ def removeFromCart():
 		result={'status': False, 'message': 'Your cart is empty'}
 	return jsonify(result)
 
-@app.route('/checkoutpage', methods =['POST'] )
-def checkoutPage():
-	return render_template()
+@app.route('/checkout', methods =['POST'])
+def checkout():
+	return render_template('checkout.html', cartData = request.form)
 
 @app.route('/logout')
 def logout():
