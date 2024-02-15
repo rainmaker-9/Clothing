@@ -4,6 +4,7 @@ from flask_bcrypt import Bcrypt
 import json
 from urllib.parse import quote
 import locale
+import uuid
 
 app=Flask(__name__)
 bcrypt = Bcrypt(app)
@@ -302,14 +303,15 @@ def get_calc_product_price():
 
 @app.route('/remove-cart-item', methods =['POST'])
 def removeFromCart():
-	cartItemId = int(request.form['cartItem'])
+	spec = int(request.form['spec'])
+	color = request.form['color']
 	cursor = cnx.cursor(dictionary=True)
 	query = "SELECT product_info as products FROM tbl_cart WHERE user_id = %s"
 	cursor.execute(query, (session['user']['id'],))
 	productInfo = cursor.fetchone()
 	if productInfo != None:
 		productInfo = json.loads(productInfo['products'])
-		idx = next((i for i, item in enumerate(productInfo) if int(item["spec"]) == cartItemId), None)
+		idx = next((i for i, item in enumerate(productInfo) if int(item["spec"]) == spec and item['color'] == color), None)
 		if(idx != None):
 			if len(productInfo) == 1:
 				query = "DELETE FROM tbl_cart WHERE user_id = %s"
@@ -324,12 +326,16 @@ def removeFromCart():
 				cursor.execute(query, val)
 				cnx.commit()
 			if(cursor.rowcount > 0):
+				cursor.close()
 				result={'status': True, 'message': 'Removed from cart'}
 			else:
+				cursor.close()
 				result={'status': False, 'message': 'Failed to remove from cart'}
 		else:
+			cursor.close()
 			result={'status': False, 'message': 'Item not found'}
 	else:
+		cursor.close()
 		result={'status': False, 'message': 'Your cart is empty'}
 	return jsonify(result)
 
@@ -347,18 +353,49 @@ def checkout():
 		products = []
 		grandTotal = 0.0
 		for p in product_info:
-			query = "SELECT p.id, p.name as title, p.thumbnail, s.size, s.price, s.quantity as stock FROM tbl_products p INNER JOIN tbl_specifications s ON s.pid = p.id WHERE s.id = %s"
+			query = "SELECT p.id, p.name as title, p.thumbnail, s.size, s.price FROM tbl_products p INNER JOIN tbl_specifications s ON s.pid = p.id WHERE s.id = %s"
 			params = (p['spec'],)
 			cursor.execute(query, params)
 			product = cursor.fetchone()
 			product['spec'] = p['spec']
 			product['color'] = p['color']
 			product['qnt'] = p['qnt']
-			product['total'] = product['price'] * p['qnt']
+			product['total'] = round(product['price'] * p['qnt'])
 			grandTotal += float(product['total'])
 			products.append(product)
 		cursor.close()
 		return render_template('checkout.html', products = products, addresses = addresses, grandTotal = round(grandTotal))
+	else:
+		return redirect('/login')
+	
+@app.route('/order', methods=['GET'])
+def order():
+	if session.get('user'):
+		payment_method = request.args.get('payment_method')
+		if payment_method != None and payment_method.strip() != '':
+		# cursor = cnx.cursor(dictionary=True, buffered=True)
+		# query = "SELECT product_info FROM tbl_cart WHERE user_id = %s"
+		# params = (session['user']['id'],)
+		# cursor.execute(query, params)
+		# data = cursor.fetchone()
+		# product_info = json.loads(data['product_info'])
+		# cursor.execute("SELECT * from tbl_addresses WHERE user_id = %s", (session['user']['id'], ))
+		# addresses = cursor.fetchall()
+		# products = []
+		# grandTotal = 0.0
+		# for p in product_info:
+		# 	query = "SELECT p.id, p.name as title, p.thumbnail, s.size, s.price FROM tbl_products p INNER JOIN tbl_specifications s ON s.pid = p.id WHERE s.id = %s"
+		# 	params = (p['spec'],)
+		# 	cursor.execute(query, params)
+		# 	product = cursor.fetchone()
+		# 	product['spec'] = p['spec']
+		# 	product['color'] = p['color']
+		# 	product['qnt'] = p['qnt']
+		# 	product['total'] = round(product['price'] * p['qnt'])
+		# 	grandTotal += float(product['total'])
+		# 	products.append(product)
+		# cursor.close()
+			return render_template('order.html', payment_method = payment_method)
 	else:
 		return redirect('/login')
 

@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3307
--- Generation Time: Feb 15, 2024 at 07:59 AM
+-- Generation Time: Feb 15, 2024 at 01:22 PM
 -- Server version: 11.2.2-MariaDB
 -- PHP Version: 8.2.13
 
@@ -70,7 +70,7 @@ CREATE TABLE IF NOT EXISTS `tbl_cart` (
 --
 
 INSERT INTO `tbl_cart` (`product_info`, `user_id`, `date`) VALUES
-('[{\"spec\": \"19\", \"color\": \"Blue\", \"qnt\": 1}, {\"spec\": \"20\", \"color\": \"Red\", \"qnt\": 2}]', 1, '2024-02-15 04:23:38');
+('[{\"spec\": \"19\", \"color\": \"Black\", \"qnt\": 1}]', 1, '2024-02-15 04:23:38');
 
 -- --------------------------------------------------------
 
@@ -98,6 +98,26 @@ INSERT INTO `tbl_categories` (`id`, `title`, `date`) VALUES
 (5, 'Jeans', '2024-02-11 04:19:55'),
 (6, 'Hoodie', '2024-02-11 04:19:55'),
 (7, 'Sweatshirt', '2024-02-11 04:19:55');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `tbl_orders`
+--
+
+DROP TABLE IF EXISTS `tbl_orders`;
+CREATE TABLE IF NOT EXISTS `tbl_orders` (
+  `order_id` int(11) NOT NULL AUTO_INCREMENT,
+  `order_no` tinytext NOT NULL,
+  `order_user` int(11) DEFAULT NULL,
+  `order_total` float NOT NULL,
+  `order_shipto` int(11) DEFAULT NULL,
+  `order_payment_mode` enum('Pay On Delivery','UPI') NOT NULL,
+  `order_date` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`order_id`),
+  KEY `order_user` (`order_user`),
+  KEY `order_shipto` (`order_shipto`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -224,6 +244,13 @@ ALTER TABLE `tbl_addresses`
 --
 ALTER TABLE `tbl_cart`
   ADD CONSTRAINT `tbl_cart_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `tbl_users` (`id`);
+
+--
+-- Constraints for table `tbl_orders`
+--
+ALTER TABLE `tbl_orders`
+  ADD CONSTRAINT `tbl_orders_ibfk_1` FOREIGN KEY (`order_user`) REFERENCES `tbl_users` (`id`),
+  ADD CONSTRAINT `tbl_orders_ibfk_2` FOREIGN KEY (`order_shipto`) REFERENCES `tbl_addresses` (`id`);
 
 --
 -- Constraints for table `tbl_products`
