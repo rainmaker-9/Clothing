@@ -5,7 +5,7 @@
 {% endblock %}
 {% block content %}
 <div class="container py-3 py-md-5">
-  <form id="frmCheckout" class="row g-3">
+  <div class="row g-3">
     {% if cartProducts %}
     {% for product in cartProducts %}
     <div class="col-md-6 col-xl-5 col-xxl-4">
@@ -23,17 +23,22 @@
                   <a class="link-danger small btn-remove-from-cart" href="#" data-cart-item="{{product.spec}}">
                     <i class="fa-solid fa-trash-can"></i></a>
                 </div>
-                <p class="mb-0" id="product-price">{{ product.price|currency_format }}</p>
+                <p class="mb-0" id="product-price">{{ (product.price*product.qnt)|currency_format }}</p>
                 <p class="mb-0">Size: {{ product.size }}</p>
                 <p class="mb-0">Color: {{ product.color }}</p>
               </div>
               <div class="col-md-8 col-xxl-6">
                 <div class="d-flex gap-2 align-items-center">
-                  <label for="">Quantity</label>
-                  <select class="form-select form-select-sm" data-cart-item="{{product.spec}}">
+                  <label for="qnt-{{product.spec}}">Quantity</label>
+                  <select class="form-select form-select-sm" name="qnt" id="qnt-{{product.spec}}"
+                    data-cart-item="{{product.spec}}" data-cart-item-color="{{product.color}}">
                     {% if product.stock > 1 %}
                     {% for qnt in range(1, product.stock + 1) %}
+                    {% if product.qnt == qnt %}
+                    <option value="{{qnt}}" selected>{{qnt}}</option>
+                    {% else %}
                     <option value="{{qnt}}">{{qnt}}</option>
+                    {% endif %}
                     {% endfor %}
                     {% endif %}
                   </select>
@@ -47,8 +52,8 @@
     {% endfor %}
     <div class="col-12">
       {% if addressCount %}
-      <button type="submit" class="btn btn-primary btn-lg rounded-1">
-        <i class="fa-solid fa-cart-arrow-down me-2"></i>Checkout</button>
+      <a href="{{ url_for('checkout') }}" class="btn btn-warning btn-lg rounded-1">
+        <i class="fa-solid fa-cart-arrow-down me-2"></i>Checkout</a>
       {% else %}
       <p class="mb-0 lead">You have not added any shipping address yet. <a class="link-danger"
           href="{{ url_for('profile') }}">Click here to add one</a></p>
@@ -62,7 +67,7 @@
           class="fa-solid fa-store-alt me-2"></i>Shop now!</a>
     </div>
     {% endif %}
-  </form>
+  </div>
 </div>
 {% endblock %}
 {% block scripts %}
@@ -71,8 +76,8 @@
   if (removeFromCartButtons.length) {
     removeFromCartButtons.forEach(button => {
       button.addEventListener('click', async (e) => {
-        e.preventDefault();
-        const cartItem = e.currentTarget.dataset.cartItem;
+        e.preventDefault()
+        const cartItem = e.currentTarget.dataset.cartItem
         if (cartItem) {
           const confirm = await showConfirm('Are you sure', 'Are you sure you want to remove this product from cart?', 'Yes', 'danger', 'No', 'secondary')
           if (confirm.isConfirmed) {
@@ -106,9 +111,10 @@
     quantitySelects.forEach(function (select) {
       select.addEventListener('change', function (e) {
         const productPrice = select.closest('.card').querySelector('#product-price');
-        if (productPrice && e.target.dataset.cartItem && e.target.value) {
+        if (productPrice && e.target.dataset.cartItem && e.target.dataset.cartItemColor && e.target.value) {
           const data = new FormData;
           data.append('spec-id', e.target.dataset.cartItem)
+          data.append('color', e.target.dataset.cartItemColor)
           data.append('quantity', e.target.value)
           fetch('/get-calc-product-price', { method: "POST", body: data }).then(response => {
             if (!response.ok) throw new Error(response.statusText)
@@ -131,33 +137,6 @@
         }
       });
     });
-  }
-
-  const frmCheckout = document.querySelector('#frmCheckout')
-
-  if (frmCheckout) {
-    frmCheckout.addEventListener('submit', (e) => {
-      e.preventDefault();
-      if (quantitySelects.length) {
-        const data = new FormData;
-        const products = [];
-        quantitySelects.forEach(select => {
-          const prod = new Product(select.dataset.cartItem, select.value)
-          products.push(prod);
-        })
-        data.append('cart-items', JSON.stringify(products))
-        fetch('/checkout', { method: "POST", body: data }).then(response => {
-
-        })
-      }
-    })
-  }
-
-  function Product(spec_id, quantity) {
-    return {
-      spec: spec_id,
-      qnt: quantity
-    }
   }
 </script>
 {% endblock %}

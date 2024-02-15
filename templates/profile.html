@@ -37,7 +37,7 @@
                     <div class="col-12">
                       <div class="form-floating">
                         <textarea class="form-control" name="address_full" id="address_full"
-                          placeholder="Enter Full Address" maxlength="255" style="height: 150px;" required></textarea>
+                          placeholder="Enter Full Address" maxlength="255" style="height: 100px;" required></textarea>
                         <label for="address_full">Address</label>
                       </div>
                     </div>
@@ -99,12 +99,17 @@
               <div class="row g-3">
                 {% for address in addresses %}
                 <div class="col-md-6 col-xl-4">
-                  <div class="card card-body shadow border-0 h-100">
-                    <h5>{{ address.title }}</h5>
-                    <div class="text-muted">
-                      <span class="d-block">{{ address.full }} {{ address.pincode }}</span>
-                      <span class="d-block">{{ address.state }}</span>
-                      <a href="tel:+91{{address.contact}}" class="link-danger">{{ address.contact }}</a>
+                  <div class="card shadow border-0 h-100">
+                    <div class="card-body">
+                      <h5>{{ address.title }}</h5>
+                      <div class="text-muted">
+                        <span class="d-block">{{ address.full }} {{ address.pincode }}</span>
+                        <span class="d-block">{{ address.state }}</span>
+                      </div>
+                    </div>
+                    <div class="card-footer bg-transparent border-0">
+                      <a href="tel:+91{{address.contact}}" class="link-danger">
+                        <i class="fa-solid fa-phone me-1"></i>{{ address.contact }}</a>
                     </div>
                   </div>
                 </div>

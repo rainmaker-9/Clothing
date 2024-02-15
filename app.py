@@ -202,6 +202,7 @@ def cart():
 					product = cursor.fetchone()
 					product['spec'] = p['spec']
 					product['color'] = p['color']
+					product['qnt'] = p['qnt']
 					products.append(product)
 				cursor.close()
 				return render_template('cart.html', cartProducts = products, addressCount = addressCount)
@@ -231,16 +232,21 @@ def add_to_cart():
 					products = cursor.fetchone()
 					if products != None:
 						products = json.loads(products['product_info'])
-						for product in products:
-							if product['spec'] == cartItem['spec'] and product['color'] == cartItem['color']:
-								return jsonify({"status": False, "message": "Product is already in the cart."})
-						products.append(cartItem)
+						idx = next((i for i, item in enumerate(products) if int(item["spec"]) == int(cartItem['spec']) and item['color'] == cartItem['color']), None)
+						if idx != None:
+							product = products[idx]
+							product['qnt'] = int(product['qnt']) + 1
+							products[idx] = product
+						else:
+							cartItem['qnt'] = 1
+							products.append(cartItem)
 						query = "UPDATE tbl_cart SET product_info = %s WHERE user_id = %s"
 						params = (json.dumps(products), session['user']['id'])
 						cursor.execute(query, params)
 						cnx.commit()
 					else:
 						query = "INSERT INTO tbl_cart (product_info, user_id) VALUES (%s, %s)"
+						cartItem['qnt'] = 1
 						product = json.dumps([cartItem])
 						params = (product, session['user']['id'])
 						cursor.execute(query, params)
@@ -256,16 +262,37 @@ def add_to_cart():
 @app.route('/get-calc-product-price', methods=['POST'])
 def get_calc_product_price():
 	spec = request.form.get('spec-id')
+	color = request.form.get('color')
 	qnt = int(request.form.get('quantity'))
-	if spec != None and spec.strip() != '':
+	if spec != None and spec.strip() != '' and color != None and color.strip() != '' and qnt > 0:
 		cursor = cnx.cursor(dictionary=True)
 		query = "SELECT quantity, price FROM tbl_specifications WHERE id = %s"
 		cursor.execute(query, (spec, ))
 		variant = cursor.fetchone()
 		if variant != None:
 			if qnt <= int(variant['quantity']):
-				price = qnt * variant['price']
-				return jsonify({"status": True, "price": locale.currency(price, grouping=True)})
+				query = "SELECT product_info FROM tbl_cart WHERE user_id = %s"
+				cursor.execute(query, (session['user']['id'], ))
+				products = cursor.fetchone()
+				if products != None:
+					products = json.loads(products['product_info'])
+					idx = next((i for i, item in enumerate(products) if int(item["spec"]) == int(spec) and item['color'] == color), None)
+					if idx != None:
+						product = products[idx]
+						product['qnt'] = qnt
+						products[idx] = product
+						query = "UPDATE tbl_cart SET product_info = %s WHERE user_id = %s"
+						cursor.execute(query, (json.dumps(products), session['user']['id']))
+						cnx.commit()
+						if cursor.rowcount > 0:
+							price = qnt * variant['price']
+							return jsonify({"status": True, "price": locale.currency(price, grouping=True)})
+						else:
+							return jsonify({"status": False, "message": "Cart not updated"})
+					else:
+						return jsonify({"status": False, "message": "Product not found"})
+				else:
+					return jsonify({"status": False, "message": "Something went wrong"})
 			else:
 				return jsonify({"status": False, "message": "Invalid product quantity"})
 		else:
@@ -306,9 +333,34 @@ def removeFromCart():
 		result={'status': False, 'message': 'Your cart is empty'}
 	return jsonify(result)
 
-@app.route('/checkout', methods =['POST'])
+@app.route('/checkout', methods =['GET'])
 def checkout():
-	return render_template('checkout.html', cartData = request.form)
+	if session.get('user'):
+		cursor = cnx.cursor(dictionary=True, buffered=True)
+		query = "SELECT product_info FROM tbl_cart WHERE user_id = %s"
+		params = (session['user']['id'],)
+		cursor.execute(query, params)
+		data = cursor.fetchone()
+		product_info = json.loads(data['product_info'])
+		cursor.execute("SELECT * from tbl_addresses WHERE user_id = %s", (session['user']['id'], ))
+		addresses = cursor.fetchall()
+		products = []
+		grandTotal = 0.0
+		for p in product_info:
+			query = "SELECT p.id, p.name as title, p.thumbnail, s.size, s.price, s.quantity as stock FROM tbl_products p INNER JOIN tbl_specifications s ON s.pid = p.id WHERE s.id = %s"
+			params = (p['spec'],)
+			cursor.execute(query, params)
+			product = cursor.fetchone()
+			product['spec'] = p['spec']
+			product['color'] = p['color']
+			product['qnt'] = p['qnt']
+			product['total'] = product['price'] * p['qnt']
+			grandTotal += float(product['total'])
+			products.append(product)
+		cursor.close()
+		return render_template('checkout.html', products = products, addresses = addresses, grandTotal = round(grandTotal))
+	else:
+		return redirect('/login')
 
 @app.route('/logout')
 def logout():

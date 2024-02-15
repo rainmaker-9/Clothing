@@ -3,8 +3,8 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3307
--- Generation Time: Feb 14, 2024 at 01:07 PM
--- Server version: 10.6.5-MariaDB
+-- Generation Time: Feb 15, 2024 at 07:59 AM
+-- Server version: 11.2.2-MariaDB
 -- PHP Version: 8.2.13
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
@@ -32,12 +32,12 @@ USE `clothing_store`;
 DROP TABLE IF EXISTS `tbl_addresses`;
 CREATE TABLE IF NOT EXISTS `tbl_addresses` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  `title` tinytext COLLATE utf8mb4_unicode_ci NOT NULL,
-  `full` tinytext COLLATE utf8mb4_unicode_ci NOT NULL,
-  `city` tinytext COLLATE utf8mb4_unicode_ci NOT NULL,
-  `state` tinytext COLLATE utf8mb4_unicode_ci NOT NULL,
+  `title` tinytext NOT NULL,
+  `full` tinytext NOT NULL,
+  `city` tinytext NOT NULL,
+  `state` tinytext NOT NULL,
   `pincode` int(11) NOT NULL,
-  `contact` varchar(10) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `contact` varchar(10) NOT NULL,
   `user_id` int(11) DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `user_id` (`user_id`)
@@ -48,8 +48,8 @@ CREATE TABLE IF NOT EXISTS `tbl_addresses` (
 --
 
 INSERT INTO `tbl_addresses` (`id`, `title`, `full`, `city`, `state`, `pincode`, `contact`, `user_id`) VALUES
-(1, 'Home', '123, ABC Road, Kolhapur, Maharashtra, India.', 'Kolhapur', 'Maharashtra', 416012, '9168242081', 2),
-(2, 'Office', 'test 1233', 'Kop', 'Maharashtra', 416008, '9028829392', 2);
+(1, 'Home', '123, ABC Road, Kolhapur, Maharashtra, India.', 'Kolhapur', 'Maharashtra', 416012, '9168242081', 1),
+(2, 'Office', 'test 1233', 'Kop', 'Maharashtra', 416008, '9028829392', 1);
 
 -- --------------------------------------------------------
 
@@ -59,7 +59,7 @@ INSERT INTO `tbl_addresses` (`id`, `title`, `full`, `city`, `state`, `pincode`, 
 
 DROP TABLE IF EXISTS `tbl_cart`;
 CREATE TABLE IF NOT EXISTS `tbl_cart` (
-  `product_info` text COLLATE utf8mb4_unicode_ci NOT NULL,
+  `product_info` text NOT NULL,
   `user_id` int(11) DEFAULT NULL,
   `date` timestamp NOT NULL DEFAULT current_timestamp(),
   KEY `user_id` (`user_id`)
@@ -70,8 +70,7 @@ CREATE TABLE IF NOT EXISTS `tbl_cart` (
 --
 
 INSERT INTO `tbl_cart` (`product_info`, `user_id`, `date`) VALUES
-('[{\"spec\": \"29\", \"color\": \"Blue\"}, {\"spec\": \"19\", \"color\": \"Red\"}]', 1, '2024-02-14 09:59:34'),
-('[{\"spec\": \"28\", \"color\": \"Red\"}, {\"spec\": \"19\", \"color\": \"Red\"}]', 2, '2024-02-14 10:27:02');
+('[{\"spec\": \"19\", \"color\": \"Blue\", \"qnt\": 1}, {\"spec\": \"20\", \"color\": \"Red\", \"qnt\": 2}]', 1, '2024-02-15 04:23:38');
 
 -- --------------------------------------------------------
 
@@ -82,7 +81,7 @@ INSERT INTO `tbl_cart` (`product_info`, `user_id`, `date`) VALUES
 DROP TABLE IF EXISTS `tbl_categories`;
 CREATE TABLE IF NOT EXISTS `tbl_categories` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  `title` tinytext COLLATE utf8mb4_unicode_ci NOT NULL,
+  `title` tinytext NOT NULL,
   `date` timestamp NOT NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -109,9 +108,9 @@ INSERT INTO `tbl_categories` (`id`, `title`, `date`) VALUES
 DROP TABLE IF EXISTS `tbl_products`;
 CREATE TABLE IF NOT EXISTS `tbl_products` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  `name` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `description` text COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `thumbnail` tinytext COLLATE utf8mb4_unicode_ci NOT NULL,
+  `name` varchar(100) DEFAULT NULL,
+  `description` text DEFAULT NULL,
+  `thumbnail` tinytext NOT NULL,
   `category` int(11) DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `categories_category` (`category`)
@@ -140,7 +139,7 @@ INSERT INTO `tbl_products` (`id`, `name`, `description`, `thumbnail`, `category`
 DROP TABLE IF EXISTS `tbl_specifications`;
 CREATE TABLE IF NOT EXISTS `tbl_specifications` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  `size` varchar(30) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `size` varchar(30) NOT NULL,
   `quantity` int(11) NOT NULL,
   `price` int(11) NOT NULL,
   `pid` int(11) DEFAULT NULL,
@@ -193,10 +192,10 @@ INSERT INTO `tbl_specifications` (`id`, `size`, `quantity`, `price`, `pid`, `dat
 DROP TABLE IF EXISTS `tbl_users`;
 CREATE TABLE IF NOT EXISTS `tbl_users` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  `fname` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `lname` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `email` tinytext COLLATE utf8mb4_unicode_ci NOT NULL,
-  `secret` tinytext COLLATE utf8mb4_unicode_ci NOT NULL,
+  `fname` varchar(50) NOT NULL,
+  `lname` varchar(50) NOT NULL,
+  `email` tinytext NOT NULL,
+  `secret` tinytext NOT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 

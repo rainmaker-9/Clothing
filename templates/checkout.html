@@ -6,9 +6,69 @@
 {% block content %}
 <div class="container py-3 py-md-5">
   <div class="row justify-content-center">
-    <pre>
-      {{cartData}}
-    </pre>
+    <div class="col-md-4">
+      {% if products|length %}
+      <div class="card shadow border-0">
+        <div class="card-header">
+          <h5 class="card-title my-1">Order Summary</h5>
+        </div>
+        <div class="card-body">
+          <div class="row g-2">
+            {% for product in products %}
+            <div class="col-12">
+              <div class="row g-2">
+                <div class="col-3 col-xl-2">
+                  <img src="/static/{{product.thumbnail}}" alt="{{ product.title }}" class="w-100 d-block">
+                </div>
+                <div class="col-9 col-xl-10 d-flex justify-content-between">
+                  <div>
+                    <h6 class="small">{{ product.title }}</h6>
+                    <small class="d-block text-black-50 lh-1">Unit Price: {{ product.price }}</small>
+                    <small class="text-body-tertiary lh-1">Size: {{ product.size }} | Color: {{ product.color }} |
+                      Quantity:
+                      {{ product.qnt }}</small>
+                  </div>
+                  <p class="text-secondary small text-end mb-0">{{ product.total|currency_format }}</p>
+                </div>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+        <div class="card-footer">
+          <h6 class="my-1 text-end text-danger-emphasis">Grand Total: {{ grandTotal|currency_format }}</h6>
+        </div>
+      </div>
+      <div class="form-check mt-3">
+        <input type="checkbox" class="form-check-input" id="order-for-other" />
+        <label class="form-check-label" for="order-for-other">Ordering for someone else?</label>
+      </div>
+      {% endif %}
+    </div>
+    <div class="col-md-8">
+      {% if addresses|length %}
+      <div class="row g-3">
+        {% for address in addresses %}
+        <div class="col-md-6 col-xl-4">
+          <div class="card shadow border-0 h-100 rounded-0">
+            <div class="card-body">
+              <h5>{{ address.title }}</h5>
+              <div class="text-muted">
+                <span class="d-block">{{ address.full }} {{ address.pincode }}</span>
+                <span class="d-block">{{ address.state }}</span>
+                <a href="tel:+91{{address.contact}}" class="link-danger">
+                  <i class="fa-solid fa-phone me-1"></i>{{ address.contact }}</a>
+              </div>
+            </div>
+            <div class="card-footer p-0">
+              <button class="btn btn-danger w-100 rounded-0">Deliver to this address</button>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </div>
   </div>
 </div>
 {% endblock %}
