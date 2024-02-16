@@ -45,7 +45,7 @@
     </div>
     <div class="col-md-6">
       {% if addresses|length %}
-      <form action="/order">
+      <form action="/order" id="frmPlaceOrder">
         <div class="row g-3">
           <div class="col-12">
             <div class="card shadow border-0">
@@ -81,7 +81,10 @@
                 </div>
               </div>
               <div class="card-footer p-0">
-                <button type="submit" class="btn btn-danger w-100 rounded-0">Deliver to this address</button>
+                <input type="radio" class="btn-check" id="btn-check-{{ address.id }}" autocomplete="off" name="ship_to"
+                  value="{{ address.id }}" required>
+                <label class="btn btn-danger w-100 rounded-0" for="btn-check-{{ address.id }}">Deliver to
+                  this address</label>
               </div>
             </div>
           </div>
@@ -94,5 +97,23 @@
 </div>
 {% endblock %}
 {% block scripts %}
-
+<script>
+  const orderButtons = document.querySelectorAll('.btn-check')
+  const frmPlaceOrder = document.querySelector('#frmPlaceOrder')
+  const paymentMethods = document.querySelectorAll('[name="payment_method"]')
+  if (orderButtons.length && paymentMethods.length && frmPlaceOrder) {
+    orderButtons.forEach(button => {
+      button.addEventListener('change', (e) => {
+        if (e.target.checked) {
+          if (Array.from(paymentMethods).some(method => method.checked)) {
+            frmPlaceOrder.submit()
+          } else {
+            e.target.checked = false
+            showAlert('Error!', 'Please select payment method', 'error', 'OK', 'danger')
+          }
+        }
+      })
+    })
+  }
+</script>
 {% endblock %}

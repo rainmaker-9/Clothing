@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3307
--- Generation Time: Feb 15, 2024 at 01:22 PM
+-- Generation Time: Feb 16, 2024 at 07:58 AM
 -- Server version: 11.2.2-MariaDB
 -- PHP Version: 8.2.13
 
@@ -65,13 +65,6 @@ CREATE TABLE IF NOT EXISTS `tbl_cart` (
   KEY `user_id` (`user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
---
--- Dumping data for table `tbl_cart`
---
-
-INSERT INTO `tbl_cart` (`product_info`, `user_id`, `date`) VALUES
-('[{\"spec\": \"19\", \"color\": \"Black\", \"qnt\": 1}]', 1, '2024-02-15 04:23:38');
-
 -- --------------------------------------------------------
 
 --
@@ -117,7 +110,44 @@ CREATE TABLE IF NOT EXISTS `tbl_orders` (
   PRIMARY KEY (`order_id`),
   KEY `order_user` (`order_user`),
   KEY `order_shipto` (`order_shipto`)
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `tbl_orders`
+--
+
+INSERT INTO `tbl_orders` (`order_id`, `order_no`, `order_user`, `order_total`, `order_shipto`, `order_payment_mode`, `order_date`) VALUES
+(1, '8851be6e-cca0-11ee-a1c5-9a22ef935f61', 1, 1500, 2, 'Pay On Delivery', '2024-02-16 07:53:54'),
+(2, 'd8ed36ba-cca0-11ee-9c92-9a22ef935f61', 1, 1398, 1, 'Pay On Delivery', '2024-02-16 07:56:10'),
+(3, '127297de-cca1-11ee-a1af-9a22ef935f61', 1, 3697, 1, 'Pay On Delivery', '2024-02-16 07:57:46');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `tbl_order_details`
+--
+
+DROP TABLE IF EXISTS `tbl_order_details`;
+CREATE TABLE IF NOT EXISTS `tbl_order_details` (
+  `order_id` int(11) DEFAULT NULL,
+  `product_id` int(11) DEFAULT NULL,
+  `product_quantity` int(11) NOT NULL,
+  `product_color` varchar(255) NOT NULL,
+  `product_total` float NOT NULL,
+  KEY `order_id` (`order_id`),
+  KEY `product_id` (`product_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `tbl_order_details`
+--
+
+INSERT INTO `tbl_order_details` (`order_id`, `product_id`, `product_quantity`, `product_color`, `product_total`) VALUES
+(1, 17, 1, 'Blue', 1500),
+(2, 13, 2, 'Red', 1398),
+(3, 19, 1, 'Black', 899),
+(3, 26, 1, 'Brown', 1299),
+(3, 6, 1, 'Blue', 1499);
 
 -- --------------------------------------------------------
 
@@ -178,27 +208,27 @@ INSERT INTO `tbl_specifications` (`id`, `size`, `quantity`, `price`, `pid`, `dat
 (3, 'L', 10, 1199, 1, '2023-12-31 09:46:53'),
 (4, 'XL', 10, 1299, 1, '2023-12-31 09:47:19'),
 (5, 'XXL', 10, 1599, 1, '2023-12-31 09:47:36'),
-(6, 'S', 10, 1499, 5, '2023-12-31 09:47:50'),
+(6, 'S', 9, 1499, 5, '2023-12-31 09:47:50'),
 (7, 'M', 10, 1499, 5, '2024-01-03 06:57:31'),
 (8, 'L', 10, 1599, 5, '2024-01-11 11:45:34'),
 (9, 'XL', 10, 1699, 5, '2024-01-11 23:02:05'),
 (10, 'XXL', 10, 1999, 5, '2024-01-11 23:02:15'),
 (11, 'S', 10, 999, 2, '2024-01-11 23:02:47'),
 (12, 'M', 10, 699, 2, '2024-01-24 08:37:53'),
-(13, 'L', 10, 699, 2, '2024-01-24 08:39:09'),
+(13, 'L', 8, 699, 2, '2024-01-24 08:39:09'),
 (14, 'XL', 10, 699, 2, '2024-01-24 08:39:17'),
 (15, 'XXL', 10, 699, 2, '2024-01-24 08:39:25'),
 (16, 'S', 10, 1500, 3, '2024-01-24 08:39:49'),
-(17, 'M', 10, 1500, 3, '2024-01-24 08:39:59'),
+(17, 'M', 9, 1500, 3, '2024-01-24 08:39:59'),
 (18, 'XXL', 10, 1500, 3, '2024-01-24 08:40:16'),
-(19, 'S', 10, 899, 4, '2024-01-24 08:40:45'),
+(19, 'S', 9, 899, 4, '2024-01-24 08:40:45'),
 (20, 'M', 10, 899, 4, '2024-01-24 08:40:57'),
 (21, 'XL', 10, 899, 4, '2024-01-24 08:41:08'),
 (22, 'XXL', 10, 899, 4, '2024-01-24 08:41:23'),
 (23, 'S', 10, 1299, 7, '2024-01-24 08:41:37'),
 (24, 'L', 10, 1299, 7, '2024-01-24 08:41:50'),
 (25, 'XL', 10, 1299, 7, '2024-01-24 08:42:05'),
-(26, 'XXL', 10, 1299, 7, '2024-01-24 08:42:18'),
+(26, 'XXL', 9, 1299, 7, '2024-01-24 08:42:18'),
 (27, 'S', 10, 1199, 6, '2024-01-24 08:42:40'),
 (28, 'M', 10, 1299, 6, '2024-01-24 08:42:52'),
 (29, 'L', 10, 1399, 6, '2024-01-24 08:43:06');
@@ -251,6 +281,13 @@ ALTER TABLE `tbl_cart`
 ALTER TABLE `tbl_orders`
   ADD CONSTRAINT `tbl_orders_ibfk_1` FOREIGN KEY (`order_user`) REFERENCES `tbl_users` (`id`),
   ADD CONSTRAINT `tbl_orders_ibfk_2` FOREIGN KEY (`order_shipto`) REFERENCES `tbl_addresses` (`id`);
+
+--
+-- Constraints for table `tbl_order_details`
+--
+ALTER TABLE `tbl_order_details`
+  ADD CONSTRAINT `tbl_order_details_ibfk_1` FOREIGN KEY (`order_id`) REFERENCES `tbl_orders` (`order_id`),
+  ADD CONSTRAINT `tbl_order_details_ibfk_2` FOREIGN KEY (`product_id`) REFERENCES `tbl_specifications` (`id`);
 
 --
 -- Constraints for table `tbl_products`

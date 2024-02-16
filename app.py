@@ -347,24 +347,27 @@ def checkout():
 		params = (session['user']['id'],)
 		cursor.execute(query, params)
 		data = cursor.fetchone()
-		product_info = json.loads(data['product_info'])
-		cursor.execute("SELECT * from tbl_addresses WHERE user_id = %s", (session['user']['id'], ))
-		addresses = cursor.fetchall()
-		products = []
-		grandTotal = 0.0
-		for p in product_info:
-			query = "SELECT p.id, p.name as title, p.thumbnail, s.size, s.price FROM tbl_products p INNER JOIN tbl_specifications s ON s.pid = p.id WHERE s.id = %s"
-			params = (p['spec'],)
-			cursor.execute(query, params)
-			product = cursor.fetchone()
-			product['spec'] = p['spec']
-			product['color'] = p['color']
-			product['qnt'] = p['qnt']
-			product['total'] = round(product['price'] * p['qnt'])
-			grandTotal += float(product['total'])
-			products.append(product)
-		cursor.close()
-		return render_template('checkout.html', products = products, addresses = addresses, grandTotal = round(grandTotal))
+		if data != None:
+			product_info = json.loads(data['product_info'])
+			cursor.execute("SELECT * from tbl_addresses WHERE user_id = %s", (session['user']['id'], ))
+			addresses = cursor.fetchall()
+			products = []
+			grandTotal = 0.0
+			for p in product_info:
+				query = "SELECT p.id, p.name as title, p.thumbnail, s.size, s.price FROM tbl_products p INNER JOIN tbl_specifications s ON s.pid = p.id WHERE s.id = %s"
+				params = (p['spec'],)
+				cursor.execute(query, params)
+				product = cursor.fetchone()
+				product['spec'] = p['spec']
+				product['color'] = p['color']
+				product['qnt'] = p['qnt']
+				product['total'] = round(product['price'] * p['qnt'])
+				grandTotal += float(product['total'])
+				products.append(product)
+			cursor.close()
+			return render_template('checkout.html', products = products, addresses = addresses, grandTotal = round(grandTotal))
+		else:
+			return redirect('/shop')
 	else:
 		return redirect('/login')
 	
@@ -372,30 +375,89 @@ def checkout():
 def order():
 	if session.get('user'):
 		payment_method = request.args.get('payment_method')
-		if payment_method != None and payment_method.strip() != '':
-		# cursor = cnx.cursor(dictionary=True, buffered=True)
-		# query = "SELECT product_info FROM tbl_cart WHERE user_id = %s"
-		# params = (session['user']['id'],)
-		# cursor.execute(query, params)
-		# data = cursor.fetchone()
-		# product_info = json.loads(data['product_info'])
-		# cursor.execute("SELECT * from tbl_addresses WHERE user_id = %s", (session['user']['id'], ))
-		# addresses = cursor.fetchall()
-		# products = []
-		# grandTotal = 0.0
-		# for p in product_info:
-		# 	query = "SELECT p.id, p.name as title, p.thumbnail, s.size, s.price FROM tbl_products p INNER JOIN tbl_specifications s ON s.pid = p.id WHERE s.id = %s"
-		# 	params = (p['spec'],)
-		# 	cursor.execute(query, params)
-		# 	product = cursor.fetchone()
-		# 	product['spec'] = p['spec']
-		# 	product['color'] = p['color']
-		# 	product['qnt'] = p['qnt']
-		# 	product['total'] = round(product['price'] * p['qnt'])
-		# 	grandTotal += float(product['total'])
-		# 	products.append(product)
-		# cursor.close()
-			return render_template('order.html', payment_method = payment_method)
+		ship_to = request.args.get('ship_to')
+		if payment_method != None and payment_method.strip() != '' and ship_to != None and ship_to.strip() != '':
+			payment_method = "Pay On Delivery" if payment_method == "pod" else "UPI"
+			ship_to = int(ship_to)
+			order_id = str(uuid.uuid1())
+			cursor = cnx.cursor(dictionary=True, buffered=True)
+			query = "SELECT product_info FROM tbl_cart WHERE user_id = %s"
+			params = (session['user']['id'],)
+			cursor.execute(query, params)
+			data = cursor.fetchone()
+			if data != None:
+				product_info = json.loads(data['product_info'])
+				cursor.execute("SELECT title, full, city, state, pincode, contact from tbl_addresses WHERE user_id = %s and id = %s", (session['user']['id'], ship_to))
+				address = cursor.fetchone()
+				if address != None:
+					products = []
+					grandTotal = 0.0
+					for p in product_info:
+						query = "SELECT p.id, p.name as title, p.thumbnail, s.size, s.price, s.id as specid FROM tbl_products p INNER JOIN tbl_specifications s ON s.pid = p.id WHERE s.id = %s"
+						params = (p['spec'],)
+						cursor.execute(query, params)
+						product = cursor.fetchone()
+						product['spec'] = p['spec']
+						product['color'] = p['color']
+						product['qnt'] = p['qnt']
+						product['total'] = round(product['price'] * p['qnt'])
+						grandTotal += float(product['total'])
+						products.append(product)
+					query = "INSERT INTO tbl_orders (order_no, order_user, order_total, order_shipto, order_payment_mode) VALUES (%s, %s, %s, %s, %s)"
+					params = (order_id, session['user']['id'], grandTotal, ship_to, payment_method)
+					cursor.execute(query, params)
+					if cursor.rowcount > 0:
+						oid = cursor._last_insert_id
+						if oid != None:
+							query = "INSERT INTO tbl_order_details (order_id, product_id, product_quantity, product_color, product_total) VALUES (%s, %s, %s, %s, %s)"
+							query2 = "UPDATE tbl_specifications SET quantity = quantity - %s WHERE id = %s"
+							for product in products:
+								params = (oid, product['spec'], product['qnt'], product['color'], product['total'])
+								cursor.execute(query, params)
+								cursor.execute(query2, (int(product['qnt']), product['spec']))
+							query = "DELETE FROM tbl_cart WHERE user_id = %s"
+							cursor.execute(query, (session['user']['id'],))
+							cnx.commit()
+							cursor.close()
+							return render_template('order.html', order_id = order_id)
+						else:
+							return render_template('order-error.html')
+					else:
+						return render_template('order-error.html')
+				else:
+					return render_template('order-error.html')
+			else:
+				return redirect('/shop')
+		else:
+			return render_template('order-error.html')
+	else:
+		return redirect('/login')
+	
+@app.route('/orders', methods=['GET'])
+def orders():
+	if session.get('user'):
+		cursor = cnx.cursor(dictionary=True)
+		query = "SELECT o.order_id as id, o.order_no as uuid, o.order_total as grand_total, o.order_payment_mode as pay_mode, o.order_date as date, a.title as shipto FROM tbl_orders o INNER JOIN tbl_addresses a ON a.id = o.order_shipto WHERE o.order_user = %s ORDER BY o.order_date DESC"
+		cursor.execute(query, (session['user']['id'], ))
+		orders = cursor.fetchall()
+		return render_template('/orders.html', orders = orders)
+	else:
+		return redirect('/login')
+	
+@app.route('/order-details/<int:order_id>', methods=['GET'])
+def order_details(order_id):
+	if session.get('user'):
+		cursor = cnx.cursor(dictionary=True)
+		query = "SELECT o.order_no as uuid, o.order_total as grand_total, o.order_payment_mode as pay_mode, o.order_date as date, a.*  FROM tbl_orders o INNER JOIN tbl_addresses a ON a.id = o.order_shipto WHERE o.order_user = %s AND o.order_id = %s"
+		cursor.execute(query, (session['user']['id'], order_id))
+		order = cursor.fetchone()
+		if order != None:
+			query = "SELECT p.id, p.name as title, p.thumbnail, s.size, s.price, d.product_quantity as quantity, d.product_color as color, d.product_total as total FROM tbl_products p INNER JOIN tbl_specifications s ON p.id = s.pid INNER JOIN tbl_order_details d ON s.id = d.product_id WHERE d.order_id = %s"
+			cursor.execute(query, (order_id, ))
+			order_details = cursor.fetchall()
+			return render_template('order-details.html', order = order, details = order_details, user = session['user'])
+		else:
+			return redirect('/shop')
 	else:
 		return redirect('/login')
 

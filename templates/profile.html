@@ -141,17 +141,7 @@
         if (!response.ok && response.status !== 401) throw new Error(response.statusText)
         if (response.ok && response.status === 200) {
           response.json().then(result => {
-            Swal.fire({
-              title: result.status ? 'Success' : 'Error!',
-              text: result.message,
-              icon: result.status ? 'success' : 'error',
-              confirmButtonText: 'OK'
-            }).then(res => {
-              if (result.status) {
-                e.target.reset();
-                location.reload();
-              }
-            })
+            showAlert(result.status ? 'Success' : 'Error!', result.message, result.status ? 'success' : 'error', 'OK', result.status ? 'success' : 'danger', reloadPage)
           })
         }
       }).finally(() => disableFields(inputs, false))
