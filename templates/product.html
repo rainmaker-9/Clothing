@@ -159,7 +159,7 @@
                 <div class="d-flex gap-3">
                   <button type="submit" class="btn btn-danger rounded-1 flex-grow-1 flex-lg-grow-0">
                     <i class="fa-solid fa-cart-plus me-2"></i>Add to Cart</button>
-                  <button type="button" class="btn btn-warning rounded-1 flex-grow-1 flex-lg-grow-0">
+                  <button id="btnBuyNow" type="button" class="btn btn-warning rounded-1 flex-grow-1 flex-lg-grow-0">
                     <i class="fa-solid fa-cart-flatbed me-2"></i>Buy Now!</button>
                 </div>
               </div>
@@ -177,79 +177,5 @@
 </div>
 {% endblock %}
 {% block scripts %}
-<script>
-  const priceContainer = document.querySelector('#price-container')
-  const availableStock = document.querySelector('#available-stock')
-  const ctaButtonsContainer = document.querySelector('#cta-buttons-container');
-
-  const frmAddToCart = document.querySelector('#frmAddToCart')
-  if (frmAddToCart) {
-    frmAddToCart.addEventListener('submit', (e) => {
-      e.preventDefault();
-      const data = new FormData(e.target)
-      const inputs = e.target.querySelectorAll('input, button')
-      disableFields(inputs, true)
-      fetch('/add-to-cart', { method: "POST", body: data }).then(response => {
-        if (response.status === 401) location.replace('/login')
-        if (!response.ok && response.status !== 401) throw new Error(response.statusText)
-        if (response.ok && response.status === 200) {
-          response.json().then(result => {
-            Swal.fire({
-              title: result.status ? 'Success' : 'Error!',
-              text: result.message,
-              icon: result.status ? 'success' : 'error',
-              confirmButtonText: 'OK'
-            }).then(res => {
-              if (result.status) {
-                location.reload();
-              }
-            })
-          })
-        }
-      }).finally(() => disableFields(inputs, false))
-    })
-  }
-
-  const sizeButtons = document.querySelectorAll('.size-input-radio input[type="radio"]')
-  if (sizeButtons.length) {
-    sizeButtons.forEach(button => {
-      button.addEventListener('change', (e) => {
-        if (e.target.checked) {
-          const data = new FormData;
-          data.append('spec-id', e.target.value)
-          fetch('/get-product-price', { method: "POST", body: data }).then(response => {
-            if (!response.ok) throw new Error(response.statusText)
-            response.json().then(result => {
-              if (result.status) {
-                removeAllChildNodes(priceContainer)
-                priceContainer.classList.remove('text-muted', 'small')
-                priceContainer.classList.add('display-6')
-                priceContainer.textContent = result.amt
-                if (result.qnt) {
-                  ctaButtonsContainer.classList.remove('d-none')
-                  availableStock.textContent = `${result.qnt} items left.`
-                  availableStock.classList.remove('text-danger', 'fs-5')
-                  availableStock.classList.add('text-muted', 'small')
-                } else {
-                  ctaButtonsContainer.classList.add('d-none')
-                  availableStock.classList.remove('text-muted', 'small')
-                  availableStock.classList.add('text-danger', 'fs-5')
-                  availableStock.textContent = `Currently unavailable`
-                }
-              } else {
-                priceContainer.classList.remove('display-6')
-                priceContainer.classList.add('text-muted', 'small')
-                priceContainer.textContent = 'Select size to view price'
-                availableStock.textContent = ''
-                if (!ctaButtonsContainer.classList.contains('d-none')) {
-                  ctaButtonsContainer.classList.add('d-none')
-                }
-              }
-            })
-          })
-        }
-      })
-    })
-  }
-</script>
+<script src="/static/js/product.js" type="text/javascript"></script>
 {% endblock %}

@@ -80,6 +80,55 @@ def login():
 		else:
 			return render_template('login.html')
 		
+@app.route('/sign-up', methods=['GET'])
+def sign_up():
+	if session.get('user'):
+		return redirect('/profile')
+	else:
+		return render_template('signup.html')
+	
+@app.route('/register', methods=['POST'])
+def register():
+	if session.get('user'):
+		return jsonify({'status': True, 'message': "Invalid operation."})
+	else:
+		firstName=request.form.get("first-name")
+		lastName=request.form.get("last-name")
+		email=request.form.get("email")
+		password=request.form.get("password")
+		confirmPassword=request.form.get("confirm-password")
+
+		if firstName != None and firstName.strip() != '' and lastName != None and lastName.strip() != '' and email != None and email.strip() != '' and password != None and password.strip() != '' and confirmPassword != None and confirmPassword.strip() != '':
+			if password == confirmPassword:
+				cursor=cnx.cursor(dictionary=True)
+				query = "SELECT COUNT(id) as count FROM tbl_users WHERE email = %s"
+				params = (email,)
+				cursor.execute(query, params)
+				data = cursor.fetchone()
+				if data != None:
+					if int(data['count']) > 0:
+						return jsonify({'status': False, 'message': "User already exists with this email address."})
+				hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
+				cursor=cnx.cursor(dictionary=True)
+				query="INSERT INTO tbl_users (fname,lname,email,secret) VALUES (%s,%s,%s,%s)"
+				val=(firstName,lastName,email,hashed_password)
+				cursor.execute(query,val)
+				cnx.commit()
+				affected_rows = cursor.rowcount
+				cursor.close()
+				if affected_rows > 0:
+					cursor=cnx.cursor(dictionary=True)
+					query = "SELECT id, CONCAT(fname, ' ', lname) as name FROM tbl_users WHERE email = %s"
+					params = (email,)
+					cursor.execute(query, params)
+					data = cursor.fetchone()
+					session['user'] = dict(email = email, id = data['id'], name = data['name'])
+				return jsonify({'status': True if affected_rows > 0 else False, 'message': "Registration successful" if affected_rows > 0 else "Failed to register."})
+			else:
+				return jsonify({'status': False, 'message': "Password do not match"})
+		else:
+			return jsonify({'status': False, 'message': "Invalid request."})
+		
 @app.route('/profile', methods=['GET'])
 def profile():
 	if session.get('user'):
@@ -97,7 +146,7 @@ def profile():
 			return render_template('profile.html', user = user, addressCount = addressCount, addresses= addresses)
 		return render_template('profile.html', user = user, addressCount = addressCount)
 	else:
-		return redirect('/shop')
+		return redirect('/login')
 
 @app.route('/add-address', methods=['POST'])
 def add_address():
@@ -120,21 +169,6 @@ def add_address():
 	else:
 		return make_response(jsonify({"status": False, "message": "You must be logged in."})), 401
 
-@app.route('/signup', methods=['POST'])
-def signup():
-	if request.method=='POST':
-		fname=request.form.get("fname")
-		lname=request.form.get("lname")
-		email=request.form.get("email")
-		pass1=request.form.get("pass1")
-		pass2=request.form.get("pass2")
-		cursor=cnx.cursor()
-		query="INSERT INTO project.signup(fname,lname,email,pass1,pass2) VALUES(%s,%s,%s,%s,%s)"
-		val=(fname,lname,email,pass1,pass2)
-		cursor.execute(query,val)
-		cnx.commit()
-		return render_template("form.html",fname=fname,lname=lname,email=email,pass1=pass1,pass2=pass2)
-	
 @app.route('/shop', methods=['GET'])
 def shop():
 	category = request.args.get('category')
@@ -465,22 +499,6 @@ def order_details(order_id):
 def logout():
 	session.clear()
 	return redirect(url_for("login"))
-
-'''
-@app.route('/gen-pass')
-def genPassword():
-	cursor = cnx.cursor()
-	query = "SELECT email,secret FROM tbl_users"
-	cursor.execute(query)
-	data = cursor.fetchall()
-	for user in data:
-		query = "UPDATE tbl_users SET secret = %s WHERE email = %s"
-		hashed_password = bcrypt.generate_password_hash(user[1]).decode('utf-8') 
-		params = (hashed_password, user[0])
-		cursor.execute(query, params)
-	cnx.commit()
-	return make_response('hello')
-'''
 
 if (__name__  == '__main__'):
 	app.run(debug=True)
