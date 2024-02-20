@@ -20,7 +20,7 @@
           <p class="lead text-danger-emphasis mb-0">{{ order.grand_total|currency_format }}</p>
           <p class="small mb-1">Shipping to: {{ order.shipto }}</p>
           <p class="small mb-1">Mode: {{ order.pay_mode }}</p>
-          <small>Placed on: {{ order.date.strftime('%d/%m/%Y %H:%M %p') }}</small>
+          <small>Placed on: {{ order.date.strftime('%d/%m/%Y %I:%M %p') }}</small>
         </div>
         <a href="/order-details/{{order.id}}" class="stretched-link"></a>
       </div>

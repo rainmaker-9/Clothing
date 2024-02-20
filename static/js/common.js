@@ -18,7 +18,7 @@ if (window.Swal) {
       confirmButtonText: confirmButtonText,
       buttonsStyling: false,
       customClass: {
-        confirmButton: `btn btn-${confirmButtonStyle}`,
+        confirmButton: `btn btn-${confirmButtonStyle} rouned-1`,
       },
     }).then(() => {
       if (callback) {
@@ -45,8 +45,8 @@ if (window.Swal) {
       buttonsStyling: false,
       showCancelButton: true,
       customClass: {
-        confirmButton: `btn btn-${confirmButtonStyle}`,
-        cancelButton: `btn btn-${cancelButtonStyle}`,
+        confirmButton: `btn btn-${confirmButtonStyle} rouned-1`,
+        cancelButton: `btn btn-${cancelButtonStyle} rouned-1`,
       },
     });
   }
@@ -62,8 +62,8 @@ if (window.Swal) {
       cancelButtonText: "No",
       buttonsStyling: false,
       customClass: {
-        confirmButton: `btn btn-danger`,
-        cancelButton: `btn btn-secondary`,
+        confirmButton: `btn btn-danger rounded-1`,
+        cancelButton: `btn btn-secondary rounded-1`,
       },
     }).then((res) => {
       if (res.isConfirmed) {

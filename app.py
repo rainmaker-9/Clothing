@@ -291,6 +291,8 @@ def add_to_cart():
 					return jsonify({"status": False, "message": "Product currently unavailable."})
 			else:
 				return jsonify({"status": False, "message": "Something went wrong."})
+		else:
+			return jsonify({"status": False, "message": "Please select Size and Color."})
 	else:
 		return make_response(jsonify({"status": False, "message": "You must be logged in."})), 401
 	
@@ -427,7 +429,7 @@ def order():
 					products = []
 					grandTotal = 0.0
 					for p in product_info:
-						query = "SELECT p.id, p.name as title, p.thumbnail, s.size, s.price, s.id as specid FROM tbl_products p INNER JOIN tbl_specifications s ON s.pid = p.id WHERE s.id = %s"
+						query = "SELECT s.size, s.price, s.id as specid FROM tbl_products p INNER JOIN tbl_specifications s ON s.pid = p.id WHERE s.id = %s"
 						params = (p['spec'],)
 						cursor.execute(query, params)
 						product = cursor.fetchone()

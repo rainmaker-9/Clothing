@@ -49,7 +49,7 @@
             <div class="text-muted small">
               <span class="d-block">Total: {{ order.grand_total|currency_format }}</span>
               <span class="d-block">Pay Mode: {{ order.pay_mode }} | Date: {{
-                order.date.strftime('%d/%m/%Y %H:%M %p') }}</span>
+                order.date.strftime('%d/%m/%Y %I:%M %p') }}</span>
             </div>
           </div>
           {% if details|length %}
